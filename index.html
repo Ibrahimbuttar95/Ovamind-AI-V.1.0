@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>OvaMind AI – Your PCOS Companion</title>
+
+<!-- PWA META TAGS -->
+<meta name="application-name" content="OvaMind AI">
+<meta name="description" content="Your intelligent PCOS companion — track cycles, symptoms, hormones & nutrition.">
+<meta name="theme-color" content="#7C3AED">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="OvaMind AI">
+
+<!-- PROPER MANIFEST -->
+<link rel="manifest" href="/manifest.json">
+
+<!-- APPLE TOUCH ICON -->
+<link rel="apple-touch-icon" href="/icon-192.png">
+
+<!-- FAVICON -->
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%237C3AED'/%3E%3Ctext x='32' y='46' text-anchor='middle' font-size='36' fill='white'%3E%F0%9F%8C%B8%3C/text%3E%3C/svg%3E">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --rose:    #E8649A;
+    --violet:  #7C3AED;
+    --lavender:#C4B5FD;
+    --blush:   #FDE8F0;
+    --cream:   #FFF9FB;
+    --ink:     #1E1028;
+    --muted:   #7B6F82;
+    --card:    #FFFFFF;
+    --border:  #EDE4F3;
+    --success: #22C55E;
+    --warn:    #F59E0B;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── NAV ── */
+  nav {
+    background: white;
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    background: linear-gradient(135deg, var(--violet), var(--rose));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .nav-tabs {
+    display: flex;
+    gap: 4px;
+  }
+  .nav-tab {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: none;
+    background: transparent;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .nav-tab.active, .nav-tab:hover {
+    background: var(--blush);
+    color: var(--rose);
+  }
+  .nav-tab.active { color: var(--violet); background: #EDE4F3; }
+
+  /* ── PAGES ── */
+  .page { display: none; padding: 24px; max-width: 860px; margin: 0 auto; width: 100%; }
+  .page.active { display: block; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  /* ── BUTTONS ── */
+  .btn-primary {
+    background: linear-gradient(135deg, var(--violet), var(--rose));
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+  .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-outline {
+    background: transparent;
+    color: var(--violet);
+    border: 1.5px solid var(--lavender);
+    border-radius: 12px;
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-outline:hover { background: var(--blush); }
+
+  /* ── INPUTS ── */
+  input, select, textarea {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    color: var(--ink);
+    background: white;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--lavender); }
+  label { font-size: 13px; font-weight: 500; color: var(--ink); margin-bottom: 6px; display: block; }
+
+  /* ── GRID ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+
+  /* ── BADGE ── */
+  .badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .badge-violet { background: #EDE4F3; color: var(--violet); }
+  .badge-rose   { background: var(--blush); color: var(--rose); }
+  .badge-green  { background: #DCFCE7; color: #15803D; }
+  .badge-warn   { background: #FEF3C7; color: #92400E; }
+
+  /* ── HERO ── */
+  .hero {
+    background: linear-gradient(135deg, #4C1D95 0%, #7C3AED 50%, #E8649A 100%);
+    border-radius: 20px;
+    padding: 32px;
+    color: white;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 200px; height: 200px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 50%;
+  }
+  .hero-greeting { font-size: 13px; opacity: 0.8; margin-bottom: 6px; }
+  .hero-title { font-family: 'DM Serif Display', serif; font-size: 28px; margin-bottom: 8px; }
+  .hero-sub { font-size: 14px; opacity: 0.85; }
+
+  /* ── STAT PILLS ── */
+  .stats-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 18px; }
+  .stat-pill {
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 12px;
+    padding: 10px 16px;
+    min-width: 90px;
+  }
+  .stat-pill .val { font-size: 20px; font-weight: 700; }
+  .stat-pill .lbl { font-size: 11px; opacity: 0.8; margin-top: 2px; }
+
+  /* ── SYMPTOM CHIPS ── */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    padding: 7px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: white;
+    color: var(--muted);
+  }
+  .chip.selected { border-color: var(--violet); background: #EDE4F3; color: var(--violet); font-weight: 600; }
+
+  /* ── CYCLE CALENDAR ── */
+  .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-top: 10px; }
+  .cal-day {
+    aspect-ratio: 1;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: all 0.15s;
+  }
+  .cal-day:hover { border-color: var(--lavender); }
+  .cal-day.period { background: var(--rose); color: white; }
+  .cal-day.fertile { background: #EDE4F3; color: var(--violet); font-weight: 700; }
+  .cal-day.ovulation { background: var(--violet); color: white; }
+  .cal-day.today { border-color: var(--rose); font-weight: 700; }
+  .cal-day.other-month { color: #ccc; }
+  .cal-header-day { text-align: center; font-size: 11px; font-weight: 600; color: var(--muted); padding: 4px 0; }
+
+  /* ── CHAT ── */
+  #chat-box {
+    height: 340px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 4px 0 8px;
+    scroll-behavior: smooth;
+  }
+  .msg {
+    max-width: 80%;
+    padding: 12px 16px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .msg.user { background: linear-gradient(135deg, var(--violet), var(--rose)); color: white; align-self: flex-end; border-bottom-right-radius: 4px; }
+  .msg.ai { background: white; border: 1px solid var(--border); color: var(--ink); align-self: flex-start; border-bottom-left-radius: 4px; }
+  .msg.ai .ai-tag { font-size: 11px; font-weight: 700; color: var(--violet); margin-bottom: 4px; }
+  .chat-input-row { display: flex; gap: 10px; margin-top: 12px; }
+  .chat-input-row input { flex: 1; }
+
+  /* ── FOOD LOG ── */
+  .food-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .food-item:last-child { border-bottom: none; }
+  .food-name { font-size: 14px; font-weight: 500; }
+  .food-macros { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .food-cal { font-size: 16px; font-weight: 700; color: var(--violet); }
+
+  /* ── PROGRESS BAR ── */
+  .progress-wrap { margin: 8px 0; }
+  .progress-label { display: flex; justify-content: space-between; font-size: 12px; margin-bottom: 5px; color: var(--muted); }
+  .progress-bar { height: 8px; background: var(--border); border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 99px; transition: width 0.6s ease; }
+
+  /* ── QUIZ ── */
+  .quiz-option {
+    padding: 14px 18px;
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+    background: white;
+  }
+  .quiz-option:hover { border-color: var(--lavender); background: var(--blush); }
+  .quiz-option.selected { border-color: var(--violet); background: #EDE4F3; color: var(--violet); font-weight: 600; }
+
+  /* ── HORMONE TRACKER ── */
+  .hormone-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .hormone-row:last-child { border-bottom: none; }
+  .hormone-name { width: 110px; font-size: 13px; font-weight: 600; }
+  .hormone-bar-wrap { flex: 1; }
+  .hormone-val { font-size: 13px; font-weight: 700; width: 60px; text-align: right; }
+
+  /* ── TIPS ── */
+  .tip-card {
+    background: linear-gradient(135deg, #F5F3FF, #FDF2F8);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .tip-icon { font-size: 22px; margin-bottom: 8px; }
+  .tip-title { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .tip-text { font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  /* ── SPINNER ── */
+  .spinner {
+    width: 18px; height: 18px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: inline-block;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── SECTION TITLE ── */
+  .section-title { font-family: 'DM Serif Display', serif; font-size: 20px; margin-bottom: 16px; }
+
+  /* ── LEGEND ── */
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 12px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* ── RESULT CARD ── */
+  .result-card {
+    background: linear-gradient(135deg, var(--violet), var(--rose));
+    color: white;
+    border-radius: 18px;
+    padding: 24px;
+    margin-bottom: 16px;
+    text-align: center;
+  }
+  .result-score { font-size: 56px; font-family: 'DM Serif Display', serif; }
+  .result-label { font-size: 14px; opacity: 0.9; margin-top: 4px; }
+
+  @media (max-width: 600px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .nav-tabs { display: none; }
+    .mobile-tabs {
+      display: flex;
+      overflow-x: auto;
+      gap: 6px;
+      padding: 10px 16px;
+      background: white;
+      border-bottom: 1px solid var(--border);
+    }
+  }
+  @media (min-width: 601px) { .mobile-tabs { display: none; } }
+
+  /* ── SPLASH SCREEN ── */
+  #splash {
+    position: fixed;
+    inset: 0;
+    background: linear-gradient(160deg, #4C1D95 0%, #7C3AED 55%, #E8649A 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  #splash.hidden { opacity: 0; transform: scale(1.05); pointer-events: none; }
+  .splash-icon {
+    width: 100px; height: 100px;
+    background: rgba(255,255,255,0.15);
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 28px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 52px;
+    margin-bottom: 24px;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.06)} }
+  .splash-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 36px;
+    color: white;
+    margin-bottom: 8px;
+  }
+  .splash-sub { font-size: 15px; color: rgba(255,255,255,0.75); margin-bottom: 48px; }
+  .splash-dots { display: flex; gap: 8px; }
+  .splash-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: rgba(255,255,255,0.4);
+    animation: dotPulse 1.4s ease-in-out infinite;
+  }
+  .splash-dot:nth-child(2) { animation-delay: 0.2s; }
+  .splash-dot:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes dotPulse { 0%,80%,100%{transform:scale(0.8);opacity:0.4} 40%{transform:scale(1.2);opacity:1} }
+
+  /* ── INSTALL BANNER ── */
+  #install-banner {
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    background: white;
+    border-top: 1px solid var(--border);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    z-index: 500;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.1);
+    transform: translateY(100%);
+    transition: transform 0.4s ease;
+  }
+  #install-banner.show { transform: translateY(0); }
+  .install-icon { font-size: 32px; flex-shrink: 0; }
+  .install-text { flex: 1; }
+  .install-text strong { font-size: 14px; display: block; }
+  .install-text span { font-size: 12px; color: var(--muted); }
+  .install-btn { background: linear-gradient(135deg,var(--violet),var(--rose)); color:white; border:none; border-radius:10px; padding:10px 16px; font-size:13px; font-weight:600; cursor:pointer; white-space:nowrap; }
+  .install-close { background:none; border:none; font-size:20px; color:var(--muted); cursor:pointer; padding:4px; }
+
+  /* ── LOADING SCREEN ── */
+  #loading-screen {
+    position: fixed; inset: 0;
+    background: linear-gradient(160deg,#4C1D95,#7C3AED,#E8649A);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 9998; color: white; text-align: center;
+  }
+  #loading-screen.hidden { display: none; }
+
+  /* ── PAYWALL SCREEN ── */
+  #paywall-screen {
+    position: fixed; inset: 0;
+    background: linear-gradient(160deg,#4C1D95,#7C3AED 60%,#E8649A);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 9997; color: white; text-align: center;
+    padding: 32px;
+  }
+  #paywall-screen.hidden { display: none; }
+  .paywall-icon { font-size: 72px; margin-bottom: 20px; }
+  .paywall-title { font-family: 'DM Serif Display',serif; font-size: 32px; margin-bottom: 10px; }
+  .paywall-sub { font-size: 15px; opacity: 0.85; margin-bottom: 32px; line-height: 1.6; max-width: 320px; }
+  .paywall-price {
+    background: rgba(255,255,255,0.15);
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 20px; padding: 20px 32px;
+    margin-bottom: 28px;
+  }
+  .paywall-price .amount { font-size: 48px; font-weight: 800; }
+  .paywall-price .type { font-size: 14px; opacity: 0.8; margin-top: 4px; }
+  .paywall-features { text-align: left; margin-bottom: 28px; }
+  .paywall-features div { font-size: 14px; padding: 6px 0; opacity: 0.9; }
+  .btn-paywall {
+    background: white; color: var(--violet);
+    border: none; border-radius: 14px;
+    padding: 16px 40px; font-size: 16px; font-weight: 800;
+    cursor: pointer; width: 100%; max-width: 320px;
+    transition: transform 0.2s, opacity 0.2s;
+  }
+  .btn-paywall:hover { transform: translateY(-2px); opacity: 0.95; }
+
+  /* ── APP CONTENT wrapper ── */
+  #app-content.hidden { display: none; }
+</style>
+</head>
+<body>
+
+<!-- LOADING SCREEN -->
+<div id="loading-screen">
+  <div style="font-size:64px;margin-bottom:20px;animation:pulse 2s ease-in-out infinite">🌸</div>
+  <div style="font-family:'DM Serif Display',serif;font-size:28px;margin-bottom:8px">OvaMind AI</div>
+  <div style="font-size:14px;opacity:0.8;margin-bottom:40px">Verifying your access...</div>
+  <div class="splash-dots">
+    <div class="splash-dot"></div>
+    <div class="splash-dot"></div>
+    <div class="splash-dot"></div>
+  </div>
+</div>
+
+<!-- PAYWALL SCREEN -->
+<div id="paywall-screen" class="hidden">
+  <div class="paywall-icon">🌸</div>
+  <div class="paywall-title">OvaMind AI</div>
+  <div class="paywall-sub">Your complete PCOS health companion — AI-powered, always with you.</div>
+  <div class="paywall-price">
+    <div class="amount">$25</div>
+    <div class="type">One-time · Lifetime Access</div>
+  </div>
+  <div class="paywall-features">
+    <div>✅ AI Chat — ask anything about PCOS</div>
+    <div>✅ Cycle & Symptom Tracker</div>
+    <div>✅ Hormone Log & Analysis</div>
+    <div>✅ Nutrition & Meal Planner</div>
+    <div>✅ PCOS Risk Assessment Quiz</div>
+    <div>✅ Works offline — add to home screen</div>
+  </div>
+  <button class="btn-paywall" onclick="goToWhop()">Get Lifetime Access →</button>
+  <p style="font-size:12px;opacity:0.6;margin-top:16px">Already purchased? <span style="text-decoration:underline;cursor:pointer" onclick="goToWhop()">Sign in via Whop</span></p>
+</div>
+
+<!-- SPLASH SCREEN -->
+<div id="splash">
+  <div class="splash-icon">🌸</div>
+  <div class="splash-title">OvaMind AI</div>
+  <div class="splash-sub">Your PCOS Companion</div>
+  <div class="splash-dots">
+    <div class="splash-dot"></div>
+    <div class="splash-dot"></div>
+    <div class="splash-dot"></div>
+  </div>
+</div>
+
+<!-- INSTALL BANNER (Add to Home Screen prompt) -->
+<div id="install-banner">
+  <div class="install-icon">🌸</div>
+  <div class="install-text">
+    <strong>Add OvaMind AI to Home Screen</strong>
+    <span>Access instantly like a real app — no app store needed</span>
+  </div>
+  <button class="install-btn" id="install-btn">Install</button>
+  <button class="install-close" onclick="dismissBanner()">✕</button>
+</div>
+
+<!-- APP CONTENT (hidden until access verified) -->
+<div id="app-content" class="hidden">
+
+<!-- NAV -->
+<nav>
+  <div class="logo">OvaMind AI</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('dashboard')">Dashboard</button>
+    <button class="nav-tab" onclick="showPage('cycle')">Cycle & Symptoms</button>
+    <button class="nav-tab" onclick="showPage('nutrition')">Nutrition</button>
+    <button class="nav-tab" onclick="showPage('hormones')">Hormones</button>
+    <button class="nav-tab" onclick="showPage('chat')">AI Chat</button>
+    <button class="nav-tab" onclick="showPage('quiz')">Assessment</button>
+  </div>
+</nav>
+
+<!-- MOBILE TABS -->
+<div class="mobile-tabs">
+  <button class="nav-tab active" onclick="showPage('dashboard')">🏠 Home</button>
+  <button class="nav-tab" onclick="showPage('cycle')">🌸 Cycle</button>
+  <button class="nav-tab" onclick="showPage('nutrition')">🥗 Food</button>
+  <button class="nav-tab" onclick="showPage('hormones')">🔬 Hormones</button>
+  <button class="nav-tab" onclick="showPage('chat')">💬 AI</button>
+  <button class="nav-tab" onclick="showPage('quiz')">📋 Quiz</button>
+</div>
+
+<!-- ═══════════════ DASHBOARD ═══════════════ -->
+<div id="page-dashboard" class="page active">
+
+  <div class="hero">
+    <div class="hero-greeting">Good morning ✨</div>
+    <div class="hero-title">How are you feeling today?</div>
+    <div class="hero-sub">Your PCOS journey, tracked with care.</div>
+    <div class="stats-row">
+      <div class="stat-pill"><div class="val">Day 14</div><div class="lbl">Cycle Day</div></div>
+      <div class="stat-pill"><div class="val">72%</div><div class="lbl">Wellness Score</div></div>
+      <div class="stat-pill"><div class="val">1,420</div><div class="lbl">Calories</div></div>
+      <div class="stat-pill"><div class="val">6.8h</div><div class="lbl">Sleep</div></div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Today's Mood</div>
+      <div class="chips" id="mood-chips">
+        <div class="chip selected" onclick="toggleChip(this)">😊 Good</div>
+        <div class="chip" onclick="toggleChip(this)">😴 Tired</div>
+        <div class="chip" onclick="toggleChip(this)">😣 Crampy</div>
+        <div class="chip" onclick="toggleChip(this)">😤 Bloated</div>
+        <div class="chip" onclick="toggleChip(this)">🌸 Calm</div>
+        <div class="chip" onclick="toggleChip(this)">😰 Anxious</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Quick Log</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div>
+          <label>Water (glasses)</label>
+          <input type="number" id="water-log" placeholder="0" min="0" max="20" value="5">
+        </div>
+        <div>
+          <label>Sleep (hours)</label>
+          <input type="number" id="sleep-log" placeholder="0" min="0" max="24" step="0.5" value="6.8">
+        </div>
+        <button class="btn-primary" style="width:100%" onclick="saveQuickLog()">Save Log</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Today's Goals</div>
+    <div class="progress-wrap">
+      <div class="progress-label"><span>Water Intake</span><span>5 / 8 glasses</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:62%;background:linear-gradient(90deg,#7C3AED,#C4B5FD)"></div></div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-label"><span>Calories</span><span>1,420 / 1,800 kcal</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:79%;background:linear-gradient(90deg,#E8649A,#FDE8F0)"></div></div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-label"><span>Movement</span><span>25 / 30 min</span></div>
+      <div class="progress-bar"><div class="progress-fill" style="width:83%;background:linear-gradient(90deg,#22C55E,#86EFAC)"></div></div>
+    </div>
+  </div>
+
+  <div class="grid-3">
+    <div class="tip-card">
+      <div class="tip-icon">💊</div>
+      <div class="tip-title">Inositol Tip</div>
+      <div class="tip-text">Myo-inositol (4g/day) may improve insulin sensitivity in PCOS.</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">🥦</div>
+      <div class="tip-title">Anti-Inflammatory</div>
+      <div class="tip-text">Add turmeric & omega-3 rich foods to reduce PCOS-related inflammation.</div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">🧘‍♀️</div>
+      <div class="tip-title">Stress & Cortisol</div>
+      <div class="tip-text">High cortisol worsens PCOS symptoms. Try 10 min of breathing exercises.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ CYCLE & SYMPTOMS ═══════════════ -->
+<div id="page-cycle" class="page">
+  <div class="section-title">Cycle & Symptom Tracker</div>
+
+  <div class="card">
+    <div class="card-title">June 2025 — Cycle Calendar</div>
+    <div class="calendar-grid" id="cal-headers"></div>
+    <div class="calendar-grid" id="cal-days"></div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:var(--rose)"></div>Period</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--lavender)"></div>Fertile Window</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--violet)"></div>Ovulation</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">Log Period</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <div>
+          <label>Start Date</label>
+          <input type="date" id="period-start">
+        </div>
+        <div>
+          <label>Flow Intensity</label>
+          <select id="flow-intensity">
+            <option>Light</option>
+            <option selected>Medium</option>
+            <option>Heavy</option>
+            <option>Spotting</option>
+          </select>
+        </div>
+        <button class="btn-primary" onclick="logPeriod()">Log Period</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Cycle Insights</div>
+      <div style="font-size:13px;line-height:1.8;color:var(--muted);">
+        <div>📅 <strong style="color:var(--ink)">Last Period:</strong> May 31</div>
+        <div>🔄 <strong style="color:var(--ink)">Avg Cycle:</strong> 34 days (irregular)</div>
+        <div>🌸 <strong style="color:var(--ink)">Next Period:</strong> ~July 4</div>
+        <div>🥚 <strong style="color:var(--ink)">Fertile Window:</strong> Jun 16–20</div>
+        <div>⚠️ <strong style="color:var(--ink)">Note:</strong> <span class="badge badge-warn">Irregular Cycle</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Today's Symptoms</div>
+    <div class="chips" id="symptom-chips">
+      <div class="chip" onclick="toggleChip(this)">🤕 Headache</div>
+      <div class="chip selected" onclick="toggleChip(this)">😣 Cramps</div>
+      <div class="chip" onclick="toggleChip(this)">😤 Bloating</div>
+      <div class="chip" onclick="toggleChip(this)">🌙 Fatigue</div>
+      <div class="chip selected" onclick="toggleChip(this)">🧴 Acne</div>
+      <div class="chip" onclick="toggleChip(this)">💇 Hair Loss</div>
+      <div class="chip" onclick="toggleChip(this)">😤 Mood Swings</div>
+      <div class="chip" onclick="toggleChip(this)">🍬 Cravings</div>
+      <div class="chip" onclick="toggleChip(this)">💦 Excessive Sweating</div>
+      <div class="chip" onclick="toggleChip(this)">😴 Insomnia</div>
+      <div class="chip" onclick="toggleChip(this)">⚖️ Weight Gain</div>
+      <div class="chip" onclick="toggleChip(this)">🤢 Nausea</div>
+    </div>
+    <button class="btn-primary" style="margin-top:16px" onclick="saveSymptoms()">Save Symptoms</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Pain Level</div>
+    <label>Rate your pain today (0 = none, 10 = severe)</label>
+    <input type="range" id="pain-slider" min="0" max="10" value="3" oninput="updatePain(this.value)" style="width:100%;margin:10px 0;accent-color:var(--violet)">
+    <div style="text-align:center;font-size:24px;font-weight:700;color:var(--violet)" id="pain-val">3 / 10</div>
+  </div>
+</div>
+
+<!-- ═══════════════ NUTRITION ═══════════════ -->
+<div id="page-nutrition" class="page">
+  <div class="section-title">Nutrition & Food Log</div>
+
+  <div class="card">
+    <div class="card-title">Add Food</div>
+    <div class="grid-2" style="gap:10px;margin-bottom:10px">
+      <div>
+        <label>Food Item</label>
+        <input type="text" id="food-name-input" placeholder="e.g. Greek Yogurt">
+      </div>
+      <div>
+        <label>Calories</label>
+        <input type="number" id="food-cal-input" placeholder="kcal">
+      </div>
+      <div>
+        <label>Protein (g)</label>
+        <input type="number" id="food-protein-input" placeholder="0">
+      </div>
+      <div>
+        <label>Meal</label>
+        <select id="food-meal-input">
+          <option>Breakfast</option>
+          <option>Lunch</option>
+          <option>Dinner</option>
+          <option>Snack</option>
+        </select>
+      </div>
+    </div>
+    <button class="btn-primary" onclick="addFood()">+ Add to Log</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Today's Food Log</div>
+    <div id="food-log-list">
+      <div class="food-item">
+        <div><div class="food-name">Greek Yogurt + Berries</div><div class="food-macros">Breakfast · 12g protein · Low GI</div></div>
+        <div class="food-cal">180</div>
+      </div>
+      <div class="food-item">
+        <div><div class="food-name">Quinoa Salad</div><div class="food-macros">Lunch · 18g protein · Anti-inflammatory</div></div>
+        <div class="food-cal">420</div>
+      </div>
+      <div class="food-item">
+        <div><div class="food-name">Almonds (30g)</div><div class="food-macros">Snack · 6g protein · Healthy fats</div></div>
+        <div class="food-cal">170</div>
+      </div>
+      <div class="food-item">
+        <div><div class="food-name">Grilled Salmon + Broccoli</div><div class="food-macros">Dinner · 35g protein · Omega-3 rich</div></div>
+        <div class="food-cal">650</div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+      <div style="font-size:13px;color:var(--muted)">Total Today</div>
+      <div style="font-size:18px;font-weight:700;color:var(--violet)" id="total-cal">1,420 kcal</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">PCOS-Friendly Nutrition Tips</div>
+    <div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="padding:12px;background:var(--blush);border-radius:10px;font-size:13px;">
+        🌿 <strong>Low GI Diet:</strong> Choose whole grains, legumes, and non-starchy vegetables to stabilize blood sugar and improve insulin sensitivity.
+      </div>
+      <div style="padding:12px;background:#F5F3FF;border-radius:10px;font-size:13px;">
+        🐟 <strong>Omega-3s:</strong> Salmon, walnuts, and flaxseeds help reduce androgen levels and inflammation in PCOS.
+      </div>
+      <div style="padding:12px;background:#DCFCE7;border-radius:10px;font-size:13px;">
+        🥬 <strong>Magnesium-rich foods:</strong> Spinach, pumpkin seeds, and dark chocolate support insulin function and reduce cravings.
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Get AI Meal Plan</div>
+    <div style="margin-bottom:12px;">
+      <label>Any dietary restrictions?</label>
+      <input type="text" id="diet-restriction" placeholder="e.g. vegetarian, dairy-free, gluten-free">
+    </div>
+    <button class="btn-primary" onclick="getMealPlan()" id="meal-plan-btn">🍽 Generate PCOS Meal Plan</button>
+    <div id="meal-plan-result" style="margin-top:16px;font-size:13px;line-height:1.8;color:var(--ink);display:none;"></div>
+  </div>
+</div>
+
+<!-- ═══════════════ HORMONES ═══════════════ -->
+<div id="page-hormones" class="page">
+  <div class="section-title">Hormone Tracker</div>
+
+  <div class="card">
+    <div class="card-title">Log Hormone Levels</div>
+    <div class="grid-2" style="gap:10px;margin-bottom:12px">
+      <div><label>LH (mIU/mL)</label><input type="number" id="lh-val" placeholder="e.g. 12.5" step="0.1"></div>
+      <div><label>FSH (mIU/mL)</label><input type="number" id="fsh-val" placeholder="e.g. 6.0" step="0.1"></div>
+      <div><label>Testosterone (ng/dL)</label><input type="number" id="t-val" placeholder="e.g. 65" step="1"></div>
+      <div><label>Insulin (μIU/mL)</label><input type="number" id="ins-val" placeholder="e.g. 18" step="0.1"></div>
+      <div><label>AMH (ng/mL)</label><input type="number" id="amh-val" placeholder="e.g. 7.2" step="0.1"></div>
+      <div><label>Estradiol (pg/mL)</label><input type="number" id="e2-val" placeholder="e.g. 120" step="1"></div>
+    </div>
+    <button class="btn-primary" onclick="analyzeHormones()">🔬 Analyze My Hormones</button>
+    <div id="hormone-analysis" style="margin-top:14px;font-size:13px;line-height:1.8;display:none;"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Current Hormone Profile</div>
+    <div id="hormone-bars">
+      <div class="hormone-row">
+        <div class="hormone-name">LH / FSH Ratio</div>
+        <div class="hormone-bar-wrap">
+          <div class="progress-bar"><div class="progress-fill" style="width:75%;background:linear-gradient(90deg,var(--rose),#FCA5A5)"></div></div>
+        </div>
+        <div class="hormone-val" style="color:var(--rose)">2.1 <span class="badge badge-warn" style="font-size:10px">High</span></div>
+      </div>
+      <div class="hormone-row">
+        <div class="hormone-name">Testosterone</div>
+        <div class="hormone-bar-wrap">
+          <div class="progress-bar"><div class="progress-fill" style="width:60%;background:linear-gradient(90deg,var(--warn),#FDE68A)"></div></div>
+        </div>
+        <div class="hormone-val" style="color:var(--warn)">65 ng/dL</div>
+      </div>
+      <div class="hormone-row">
+        <div class="hormone-name">Insulin</div>
+        <div class="hormone-bar-wrap">
+          <div class="progress-bar"><div class="progress-fill" style="width:55%;background:linear-gradient(90deg,var(--violet),var(--lavender))"></div></div>
+        </div>
+        <div class="hormone-val" style="color:var(--violet)">18 μIU/mL</div>
+      </div>
+      <div class="hormone-row">
+        <div class="hormone-name">AMH</div>
+        <div class="hormone-bar-wrap">
+          <div class="progress-bar"><div class="progress-fill" style="width:85%;background:linear-gradient(90deg,#7C3AED,var(--lavender))"></div></div>
+        </div>
+        <div class="hormone-val" style="color:var(--violet)">7.2 ng/mL <span class="badge badge-violet" style="font-size:10px">Elevated</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">What Your Hormones Mean</div>
+    <div style="font-size:13px;line-height:1.9;color:var(--muted)">
+      <p>📊 <strong style="color:var(--ink)">LH:FSH ratio > 2</strong> is a common marker in PCOS, indicating the ovaries may be producing more androgens.</p>
+      <p style="margin-top:8px">📈 <strong style="color:var(--ink)">Elevated AMH</strong> (>3.5 ng/mL) reflects a higher number of antral follicles, typical in PCOS.</p>
+      <p style="margin-top:8px">⚠️ <strong style="color:var(--ink)">High fasting insulin</strong> suggests insulin resistance — a major driver of PCOS symptoms.</p>
+      <p style="margin-top:8px">💡 Always consult your gynaecologist or endocrinologist before making any treatment decisions based on these values.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ AI CHAT ═══════════════ -->
+<div id="page-chat" class="page">
+  <div class="section-title">AI Health Chat</div>
+
+  <div class="card" style="padding:16px;">
+    <div id="chat-box">
+      <div class="msg ai">
+        <div class="ai-tag">OvaMind AI</div>
+        Hello! I'm your PCOS health companion. I can help you understand your symptoms, explain hormone results, suggest PCOS-friendly meals, or answer any questions about your cycle and hormones. What's on your mind today?
+      </div>
+    </div>
+    <div class="chat-input-row">
+      <input type="text" id="chat-input" placeholder="Ask about PCOS, symptoms, nutrition..." onkeydown="if(event.key==='Enter')sendChat()">
+      <button class="btn-primary" id="chat-send-btn" onclick="sendChat()">Send</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Suggested Questions</div>
+    <div class="chips">
+      <div class="chip" onclick="askSuggested(this)">What foods help PCOS?</div>
+      <div class="chip" onclick="askSuggested(this)">Why is my cycle irregular?</div>
+      <div class="chip" onclick="askSuggested(this)">How to reduce acne with PCOS?</div>
+      <div class="chip" onclick="askSuggested(this)">What is insulin resistance?</div>
+      <div class="chip" onclick="askSuggested(this)">Best exercise for PCOS?</div>
+      <div class="chip" onclick="askSuggested(this)">Can PCOS affect fertility?</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ QUIZ / ASSESSMENT ═══════════════ -->
+<div id="page-quiz" class="page">
+  <div class="section-title">PCOS Risk Assessment</div>
+
+  <div id="quiz-container">
+    <div class="card" id="quiz-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div class="card-title" style="margin:0">Question <span id="q-num">1</span> of 8</div>
+        <div class="badge badge-violet" id="q-progress">12%</div>
+      </div>
+      <div class="progress-bar" style="margin-bottom:18px">
+        <div class="progress-fill" id="quiz-progress-bar" style="width:12%;background:linear-gradient(90deg,var(--violet),var(--rose))"></div>
+      </div>
+      <div id="q-text" style="font-size:16px;font-weight:600;margin-bottom:16px;line-height:1.5"></div>
+      <div id="q-options"></div>
+      <div style="display:flex;gap:10px;margin-top:16px;">
+        <button class="btn-outline" id="q-prev" onclick="prevQ()" style="display:none">← Back</button>
+        <button class="btn-primary" id="q-next" onclick="nextQ()" style="flex:1">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="quiz-result" style="display:none">
+    <div class="result-card">
+      <div style="font-size:14px;opacity:0.85;margin-bottom:8px">Your PCOS Risk Score</div>
+      <div class="result-score" id="result-score">--</div>
+      <div class="result-label" id="result-label"></div>
+    </div>
+    <div class="card" id="result-recommendations">
+      <div class="card-title">Personalized Recommendations</div>
+      <div id="rec-list" style="font-size:13px;line-height:2;color:var(--muted)"></div>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn-outline" style="flex:1" onclick="retakeQuiz()">Retake Quiz</button>
+      <button class="btn-primary" style="flex:1" onclick="showPage('chat')">Talk to AI →</button>
+    </div>
+  </div>
+</div>
+
+
+<script>
+// ══════════════════════════════════════════
+//  PAGE NAVIGATION
+// ══════════════════════════════════════════
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  document.querySelectorAll('.nav-tab').forEach(t => {
+    if(t.textContent.toLowerCase().includes(id.slice(0,4)) || 
+       (id==='dashboard'&&t.textContent.includes('Dashboard')) ||
+       (id==='cycle'&&(t.textContent.includes('Cycle')||t.textContent.includes('🌸'))) ||
+       (id==='nutrition'&&(t.textContent.includes('Nutrition')||t.textContent.includes('🥗'))) ||
+       (id==='hormones'&&(t.textContent.includes('Hormone')||t.textContent.includes('🔬'))) ||
+       (id==='chat'&&(t.textContent.includes('Chat')||t.textContent.includes('💬'))) ||
+       (id==='quiz'&&(t.textContent.includes('Assessment')||t.textContent.includes('📋')))) {
+      t.classList.add('active');
+    }
+  });
+}
+
+// ══════════════════════════════════════════
+//  CHIP TOGGLE
+// ══════════════════════════════════════════
+function toggleChip(el) { el.classList.toggle('selected'); }
+
+// ══════════════════════════════════════════
+//  CALENDAR
+// ══════════════════════════════════════════
+(function buildCalendar() {
+  const headers = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const hc = document.getElementById('cal-headers');
+  headers.forEach(h => {
+    const d = document.createElement('div');
+    d.className = 'cal-header-day'; d.textContent = h;
+    hc.appendChild(d);
+  });
+
+  const dc = document.getElementById('cal-days');
+  const year = 2025, month = 5;
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const periodDays = [1,2,3,4,5];
+  const fertileDays = [16,17,18,19,20];
+  const ovulationDay = 17;
+  const today = 14;
+
+  for(let i=0;i<firstDay;i++){
+    const e=document.createElement('div');
+    e.className='cal-day other-month';
+    dc.appendChild(e);
+  }
+  for(let d=1;d<=daysInMonth;d++){
+    const e=document.createElement('div');
+    e.className='cal-day';
+    e.textContent=d;
+    if(periodDays.includes(d)) e.classList.add('period');
+    else if(d===ovulationDay) e.classList.add('ovulation');
+    else if(fertileDays.includes(d)) e.classList.add('fertile');
+    if(d===today) e.classList.add('today');
+    dc.appendChild(e);
+  }
+})();
+
+// ══════════════════════════════════════════
+//  QUICK LOG
+// ══════════════════════════════════════════
+function saveQuickLog() {
+  const w = document.getElementById('water-log').value;
+  const s = document.getElementById('sleep-log').value;
+  showToast(`✅ Logged: ${w} glasses water, ${s}h sleep`);
+}
+
+function logPeriod() {
+  const d = document.getElementById('period-start').value;
+  const f = document.getElementById('flow-intensity').value;
+  if(!d){showToast('Please select a start date','warn');return;}
+  showToast(`🌸 Period logged: ${d}, ${f} flow`);
+}
+
+function saveSymptoms() {
+  const sel = [...document.querySelectorAll('#symptom-chips .chip.selected')].map(c=>c.textContent.trim());
+  if(!sel.length){showToast('Select at least one symptom','warn');return;}
+  showToast(`✅ Symptoms saved: ${sel.join(', ')}`);
+}
+
+function updatePain(v) { document.getElementById('pain-val').textContent = v+' / 10'; }
+
+// ══════════════════════════════════════════
+//  FOOD LOG
+// ══════════════════════════════════════════
+let totalCal = 1420;
+function addFood() {
+  const name = document.getElementById('food-name-input').value.trim();
+  const cal  = parseInt(document.getElementById('food-cal-input').value)||0;
+  const prot = document.getElementById('food-protein-input').value||'?';
+  const meal = document.getElementById('food-meal-input').value;
+  if(!name){showToast('Enter a food name','warn');return;}
+  const list = document.getElementById('food-log-list');
+  const item = document.createElement('div');
+  item.className='food-item';
+  item.innerHTML=`<div><div class="food-name">${name}</div><div class="food-macros">${meal} · ${prot}g protein</div></div><div class="food-cal">${cal}</div>`;
+  list.appendChild(item);
+  totalCal += cal;
+  document.getElementById('total-cal').textContent = totalCal.toLocaleString()+' kcal';
+  document.getElementById('food-name-input').value='';
+  document.getElementById('food-cal-input').value='';
+  document.getElementById('food-protein-input').value='';
+  showToast('✅ Food added to log');
+}
+
+// ══════════════════════════════════════════
+//  MEAL PLAN AI
+// ══════════════════════════════════════════
+async function getMealPlan() {
+  const restriction = document.getElementById('diet-restriction').value||'none';
+  const btn = document.getElementById('meal-plan-btn');
+  const result = document.getElementById('meal-plan-result');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Generating...';
+  result.style.display='none';
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-6',
+        max_tokens:1000,
+        system:`You are a registered dietitian specializing in PCOS nutrition. Provide practical, evidence-based meal plans. Use emojis for readability. Keep responses concise and formatted with clear meal sections.`,
+        messages:[{role:'user',content:`Create a 1-day PCOS-friendly meal plan. Dietary restrictions: ${restriction}. Focus on low GI foods, anti-inflammatory ingredients, and blood sugar stability. Include breakfast, lunch, dinner, and 2 snacks with approximate calories.`}]
+      })
+    });
+    const data = await resp.json();
+    const text = data.content.map(b=>b.text||'').join('');
+    result.innerHTML = text.replace(/\n/g,'<br>');
+    result.style.display='block';
+  } catch(e) {
+    result.innerHTML='⚠️ Could not generate meal plan. Please try again.';
+    result.style.display='block';
+  }
+  btn.disabled=false;
+  btn.innerHTML='🍽 Generate PCOS Meal Plan';
+}
+
+// ══════════════════════════════════════════
+//  HORMONE ANALYSIS AI
+// ══════════════════════════════════════════
+async function analyzeHormones() {
+  const lh  = document.getElementById('lh-val').value;
+  const fsh = document.getElementById('fsh-val').value;
+  const t   = document.getElementById('t-val').value;
+  const ins = document.getElementById('ins-val').value;
+  const amh = document.getElementById('amh-val').value;
+  const e2  = document.getElementById('e2-val').value;
+
+  if(!lh && !fsh && !t && !amh){
+    showToast('Enter at least some hormone values','warn');
+    return;
+  }
+
+  const box = document.getElementById('hormone-analysis');
+  box.style.display='block';
+  box.innerHTML='<span class="spinner" style="border-color:var(--lavender);border-top-color:var(--violet)"></span> Analyzing...';
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-6',
+        max_tokens:1000,
+        system:`You are a medical assistant specializing in PCOS and reproductive endocrinology. Analyze hormone values and explain what they mean for PCOS in plain language. Always remind the user to consult their doctor. Use emojis and keep it friendly but accurate.`,
+        messages:[{role:'user',content:`Analyze these hormone levels for PCOS context:\nLH: ${lh||'not provided'} mIU/mL\nFSH: ${fsh||'not provided'} mIU/mL\nTestosterone: ${t||'not provided'} ng/dL\nFasting Insulin: ${ins||'not provided'} μIU/mL\nAMH: ${amh||'not provided'} ng/mL\nEstradiol: ${e2||'not provided'} pg/mL\n\nProvide: 1) What these values suggest 2) PCOS markers present 3) Lifestyle recommendations`}]
+      })
+    });
+    const data = await resp.json();
+    box.innerHTML = data.content.map(b=>b.text||'').join('').replace(/\n/g,'<br>');
+  } catch(e) {
+    box.innerHTML='⚠️ Analysis failed. Please try again.';
+  }
+}
+
+// ══════════════════════════════════════════
+//  AI CHAT
+// ══════════════════════════════════════════
+const chatHistory = [];
+
+async function sendChat() {
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if(!msg) return;
+
+  const box = document.getElementById('chat-box');
+  const btn = document.getElementById('chat-send-btn');
+
+  // User message
+  const userDiv = document.createElement('div');
+  userDiv.className='msg user';
+  userDiv.textContent=msg;
+  box.appendChild(userDiv);
+  chatHistory.push({role:'user',content:msg});
+  input.value='';
+  box.scrollTop=box.scrollHeight;
+
+  // Typing indicator
+  const typing = document.createElement('div');
+  typing.className='msg ai';
+  typing.innerHTML='<div class="ai-tag">OvaMind AI</div><span class="spinner" style="border-color:var(--lavender);border-top-color:var(--violet)"></span>';
+  box.appendChild(typing);
+  box.scrollTop=box.scrollHeight;
+  btn.disabled=true;
+
+  try {
+    const resp = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-6',
+        max_tokens:1000,
+        system:`You are OvaMind AI, a compassionate and knowledgeable PCOS health companion. You help women understand PCOS, track symptoms, improve nutrition, manage hormones, and support their wellbeing journey. You have expertise in reproductive endocrinology, nutrition science, and women's health. Be warm, supportive, and evidence-based. Keep responses concise but helpful. Always recommend consulting a healthcare provider for medical decisions.`,
+        messages: chatHistory
+      })
+    });
+    const data = await resp.json();
+    const aiText = data.content.map(b=>b.text||'').join('');
+    typing.innerHTML=`<div class="ai-tag">OvaMind AI</div>${aiText.replace(/\n/g,'<br>')}`;
+    chatHistory.push({role:'assistant',content:aiText});
+  } catch(e) {
+    typing.innerHTML='<div class="ai-tag">OvaMind AI</div>Sorry, I couldn\'t respond right now. Please try again.';
+  }
+  box.scrollTop=box.scrollHeight;
+  btn.disabled=false;
+}
+
+function askSuggested(el) {
+  document.getElementById('chat-input').value = el.textContent.trim();
+  showPage('chat');
+  sendChat();
+}
+
+// ══════════════════════════════════════════
+//  QUIZ
+// ══════════════════════════════════════════
+const questions = [
+  {q:'Are your menstrual cycles irregular (longer than 35 days or fewer than 8 periods/year)?',opts:['Yes, very irregular','Somewhat irregular','Usually regular','Always regular'],scores:[3,2,1,0]},
+  {q:'Do you experience unwanted hair growth on your face, chest, or abdomen?',opts:['Yes, significantly','Some hair growth','Very little','None'],scores:[3,2,1,0]},
+  {q:'Have you been told you have acne that doesn\'t respond well to typical treatments?',opts:['Yes, persistent acne','Moderate acne','Mild acne','No acne'],scores:[3,2,1,0]},
+  {q:'Have you gained weight around your abdomen or find it hard to lose weight?',opts:['Yes, significantly','Somewhat','Slight difficulty','No, weight is stable'],scores:[3,2,1,0]},
+  {q:'Do you experience fatigue, brain fog, or difficulty concentrating?',opts:['Daily','Several times/week','Occasionally','Rarely'],scores:[3,2,1,0]},
+  {q:'Has any blood test shown elevated testosterone or androgen levels?',opts:['Yes, confirmed elevated','Borderline elevated','Normal','Never tested'],scores:[3,2,0,1]},
+  {q:'Do you have a family history of PCOS, diabetes, or hormonal disorders?',opts:['Yes, strong family history','One relative affected','Unsure','No family history'],scores:[3,2,1,0]},
+  {q:'Do you experience intense sugar/carb cravings or blood sugar crashes?',opts:['Very frequently','Often','Sometimes','Rarely'],scores:[3,2,1,0]}
+];
+
+let currentQ = 0;
+let answers = [];
+
+function renderQ() {
+  const q = questions[currentQ];
+  document.getElementById('q-num').textContent = currentQ+1;
+  document.getElementById('q-progress').textContent = Math.round(((currentQ+1)/questions.length)*100)+'%';
+  document.getElementById('quiz-progress-bar').style.width = Math.round(((currentQ+1)/questions.length)*100)+'%';
+  document.getElementById('q-text').textContent = q.q;
+  const opts = document.getElementById('q-options');
+  opts.innerHTML='';
+  q.opts.forEach((o,i)=>{
+    const div=document.createElement('div');
+    div.className='quiz-option'+(answers[currentQ]===i?' selected':'');
+    div.textContent=o;
+    div.onclick=()=>{
+      document.querySelectorAll('.quiz-option').forEach(x=>x.classList.remove('selected'));
+      div.classList.add('selected');
+      answers[currentQ]=i;
+    };
+    opts.appendChild(div);
+  });
+  document.getElementById('q-prev').style.display=currentQ>0?'block':'none';
+  document.getElementById('q-next').textContent=currentQ===questions.length-1?'See Results ✨':'Next →';
+}
+
+function nextQ() {
+  if(answers[currentQ]===undefined){showToast('Please select an answer','warn');return;}
+  if(currentQ<questions.length-1){currentQ++;renderQ();}
+  else showResults();
+}
+function prevQ(){if(currentQ>0){currentQ--;renderQ();}}
+
+function showResults() {
+  const total = answers.reduce((sum,a,i)=>sum+questions[i].scores[a],0);
+  const max = questions.length*3;
+  const pct = Math.round((total/max)*100);
+
+  document.getElementById('quiz-container').style.display='none';
+  document.getElementById('quiz-result').style.display='block';
+  document.getElementById('result-score').textContent=pct+'%';
+
+  let label, recs;
+  if(pct>=70){
+    label='High PCOS Risk — Consider seeing a specialist';
+    document.querySelector('.result-card').style.background='linear-gradient(135deg,#7C3AED,#E8649A)';
+    recs=['🏥 Schedule an appointment with a gynaecologist or endocrinologist','🧪 Request hormone panel: LH, FSH, Testosterone, AMH, Fasting Insulin','🥗 Start a low-GI, anti-inflammatory diet immediately','💊 Ask your doctor about inositol supplementation','📊 Begin tracking your cycle and symptoms daily in OvaMind AI','🧘 Prioritize stress management — high cortisol worsens PCOS'];
+  } else if(pct>=40){
+    label='Moderate Risk — Monitor and consult your doctor';
+    document.querySelector('.result-card').style.background='linear-gradient(135deg,#7C3AED,#C084FC)';
+    recs=['📋 Discuss your symptoms with your GP at your next visit','🌿 Adopt a low GI diet and reduce processed sugars','🏃‍♀️ Add 30 min of moderate exercise 4-5x per week','😴 Prioritize 7-8 hours of quality sleep','📅 Track your cycle for 3 months to identify patterns','💧 Stay well hydrated and reduce caffeine intake'];
+  } else {
+    label='Lower Risk — Keep up your healthy habits!';
+    document.querySelector('.result-card').style.background='linear-gradient(135deg,#059669,#34D399)';
+    recs=['✅ Continue your current healthy lifestyle','📅 Track your cycle to spot any future changes','🥗 Maintain a balanced, whole-food diet','🏃‍♀️ Stay physically active regularly','📆 Get annual check-ups including hormone screening','💬 Use OvaMind AI to stay on top of your wellness'];
+  }
+
+  document.getElementById('result-label').textContent=label;
+  document.getElementById('rec-list').innerHTML=recs.map(r=>`<div>• ${r}</div>`).join('');
+}
+
+function retakeQuiz() {
+  currentQ=0; answers=[];
+  document.getElementById('quiz-container').style.display='block';
+  document.getElementById('quiz-result').style.display='none';
+  renderQ();
+}
+
+// ══════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════
+function showToast(msg, type='success') {
+  const t = document.createElement('div');
+  t.style.cssText=`position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:${type==='warn'?'#92400E':'#1E1028'};color:white;padding:12px 22px;border-radius:12px;font-size:13px;font-weight:500;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,0.25);animation:fadeIn 0.3s ease`;
+  t.textContent=msg;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),3000);
+}
+
+// ── INIT ──
+renderQ();
+
+// ══════════════════════════════════════════
+//  SPLASH SCREEN
+// ══════════════════════════════════════════
+window.addEventListener('load', () => {
+  setTimeout(() => {
+    const splash = document.getElementById('splash');
+    splash.classList.add('hidden');
+    setTimeout(() => splash.remove(), 700);
+  }, 2000);
+});
+
+// ══════════════════════════════════════════
+//  PWA INSTALL PROMPT
+// ══════════════════════════════════════════
+let deferredPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  // Show banner after splash clears
+  setTimeout(() => {
+    document.getElementById('install-banner').classList.add('show');
+  }, 3000);
+});
+
+document.getElementById('install-btn').addEventListener('click', async () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') showToast('✅ OvaMind AI added to home screen!');
+    deferredPrompt = null;
+  }
+  dismissBanner();
+});
+
+function dismissBanner() {
+  document.getElementById('install-banner').classList.remove('show');
+}
+
+window.addEventListener('appinstalled', () => {
+  showToast('🌸 OvaMind AI installed successfully!');
+  dismissBanner();
+});
+
+// ══════════════════════════════════════════
+//  SERVICE WORKER REGISTRATION
+// ══════════════════════════════════════════
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('[SW] Registered:', reg.scope))
+      .catch(err => console.error('[SW] Failed:', err));
+  });
+}
+
+// ══════════════════════════════════════════
+//  WHOP / ACCESS GATE
+// ══════════════════════════════════════════
+const WHOP_PRODUCT_URL  = 'https://whop.com/your-product-url/'; // 🔁 Replace with your real Whop link
+const VERIFY_ENDPOINT   = '/.netlify/functions/verify-access';
+const CHECK_INTERVAL_MS = 30 * 60 * 1000; // 30 min re-check
+
+function goToWhop() {
+  window.location.href = WHOP_PRODUCT_URL;
+}
+
+async function verifyAccess(whopUserId, email) {
+  try {
+    const res = await fetch(VERIFY_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ whop_user_id: whopUserId, email })
+    });
+    const data = await res.json();
+    return data.access === true;
+  } catch {
+    // Network error — allow if previously verified
+    return !!localStorage.getItem('ovamind_last_verified');
+  }
+}
+
+function grantAccess() {
+  localStorage.setItem('ovamind_last_verified', Date.now());
+  document.getElementById('loading-screen').classList.add('hidden');
+  document.getElementById('paywall-screen').classList.add('hidden');
+  document.getElementById('app-content').classList.remove('hidden');
+}
+
+function denyAccess() {
+  localStorage.removeItem('ovamind_whop_id');
+  localStorage.removeItem('ovamind_email');
+  localStorage.removeItem('ovamind_last_verified');
+  document.getElementById('loading-screen').classList.add('hidden');
+  document.getElementById('app-content').classList.add('hidden');
+  document.getElementById('paywall-screen').classList.remove('hidden');
+}
+
+async function initAccessGate() {
+  // Show loading, hide app
+  document.getElementById('loading-screen').classList.remove('hidden');
+  document.getElementById('app-content').classList.add('hidden');
+
+  // Check if Whop redirected back with credentials
+  const params    = new URLSearchParams(window.location.search);
+  const whopId    = params.get('whop_user_id');
+  const email     = params.get('email');
+  if (whopId) localStorage.setItem('ovamind_whop_id', whopId);
+  if (email)  localStorage.setItem('ovamind_email', email);
+  if (whopId || email) window.history.replaceState({}, '', '/');
+
+  const storedId    = localStorage.getItem('ovamind_whop_id');
+  const storedEmail = localStorage.getItem('ovamind_email');
+
+  if (!storedId && !storedEmail) {
+    // No identity at all — send to Whop
+    denyAccess();
+    return;
+  }
+
+  const hasAccess = await verifyAccess(storedId, storedEmail);
+  if (hasAccess) {
+    grantAccess();
+    // Periodic re-check (anti-bypass)
+    setInterval(async () => {
+      const still = await verifyAccess(storedId, storedEmail);
+      if (!still) denyAccess();
+      else localStorage.setItem('ovamind_last_verified', Date.now());
+    }, CHECK_INTERVAL_MS);
+  } else {
+    denyAccess();
+  }
+}
+
+// Run gate after splash clears
+setTimeout(initAccessGate, 2200);
+</script>
+
+</div><!-- end #app-content -->
+</body>
+</html>
