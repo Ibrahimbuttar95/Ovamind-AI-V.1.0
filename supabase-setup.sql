@@ -1,8 +1,3 @@
--- ══════════════════════════════════════════
---  OvaMind AI — Supabase Database Setup
---  Run this in: Supabase → SQL Editor → New Query
--- ══════════════════════════════════════════
-
 -- 1. Users / access table
 CREATE TABLE IF NOT EXISTS users (
   id                  UUID DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -42,9 +37,4 @@ ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Service role full access" ON users
   FOR ALL USING (auth.role() = 'service_role');
 
--- ══════════════════════════════════════
---  DONE. Copy your:
---  Project URL  → SUPABASE_URL
---  Service Key  → SUPABASE_SERVICE_KEY
---  (Settings → API in Supabase dashboard)
--- ══════════════════════════════════════
+
