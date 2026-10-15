@@ -474,7 +474,13 @@
     transition: transform 0.2s, opacity 0.2s;
   }
   .btn-paywall:hover { transform: translateY(-2px); opacity: 0.95; }
-
+  .btn-demo {
+    margin-top: 12px; background: transparent; color: white; border: 1px solid rgba(255,255,255,0.5);
+    border-radius: 14px; padding: 12px 24px; font-size: 14px; font-weight: 600; cursor: pointer;
+    width: 100%; max-width: 320px; transition: background 0.2s, border-color 0.2s;
+  }
+  .btn-demo:hover { background: rgba(255,255,255,0.12); border-color: white; }
+  
   /* ── APP CONTENT wrapper ── */
   #app-content.hidden { display: none; }
 </style>
@@ -511,7 +517,8 @@
     <div>✅ Works offline — add to home screen</div>
   </div>
   <button class="btn-paywall" onclick="goToWhop()">Get Lifetime Access →</button>
-  <p style="font-size:12px;opacity:0.6;margin-top:16px">Already purchased? <span style="text-decoration:underline;cursor:pointer" onclick="goToWhop()">Sign in via Whop</span></p>
+  <button class="btn-demo" onclick="startDemo()">Explore the demo</button>
+  <p id="access-note" style="font-size:12px;opacity:0.6;margin-top:16px">Already purchased? <span style="text-decoration:underline;cursor:pointer" onclick="goToWhop()">Sign in via Whop</span></p>
 </div>
 
 <!-- SPLASH SCREEN -->
@@ -876,7 +883,7 @@
       </div>
     </div>
     <div class="chat-input-row">
-      <input type="text" id="chat-input" placeholder="Ask about PCOS, symptoms, nutrition..." onkeydown="if(event.key==='Enter')sendChat()">
+      <input type="text" id="chat-input" placeholder="Ask about PCOS, symptoms, nutrition..." onkeydown="if(event.key==='Enter' && !event.isComposing && event.keyCode !== 229)sendChat()">
       <button class="btn-primary" id="chat-send-btn" onclick="sendChat()">Send</button>
     </div>
   </div>
@@ -1148,19 +1155,22 @@ async function sendChat() {
   btn.disabled=true;
 
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        model:'claude-sonnet-4-6',
-        max_tokens:1000,
-        system:`You are OvaMind AI, a compassionate and knowledgeable PCOS health companion. You help women understand PCOS, track symptoms, improve nutrition, manage hormones, and support their wellbeing journey. You have expertise in reproductive endocrinology, nutrition science, and women's health. Be warm, supportive, and evidence-based. Keep responses concise but helpful. Always recommend consulting a healthcare provider for medical decisions.`,
-        messages: chatHistory
-      })
-    });
-    const data = await resp.json();
-    const aiText = data.content.map(b=>b.text||'').join('');
-    typing.innerHTML=`<div class="ai-tag">OvaMind AI</div>${aiText.replace(/\n/g,'<br>')}`;
+    // The preview works without exposing a provider API key in the browser.
+    const lower = msg.toLowerCase();
+    let aiText = 'I can help you track symptoms, understand PCOS patterns, and prepare questions for your healthcare provider. Tell me more about what you are experiencing.';
+    if (lower.includes('food') || lower.includes('nutrition') || lower.includes('eat')) {
+      aiText = 'Focus on balanced meals with protein, fiber, and healthy fats: vegetables, beans, lentils, eggs, fish, Greek yogurt, nuts, and whole grains. Pair carbohydrates with protein to support steadier blood sugar. A registered dietitian can personalize this for you.';
+    } else if (lower.includes('cycle') || lower.includes('period') || lower.includes('irregular')) {
+      aiText = 'Irregular cycles are common with PCOS because ovulation may happen less often. Track bleeding, pain, sleep, and symptoms, and speak with a clinician if cycles are consistently longer than 35 days, very heavy, or suddenly change.';
+    } else if (lower.includes('exercise') || lower.includes('workout')) {
+      aiText = 'Choose movement you can sustain: brisk walking, strength training, cycling, swimming, or yoga. A practical starting point is 20–30 minutes most days plus two strength sessions each week.';
+    } else if (lower.includes('insulin') || lower.includes('blood sugar')) {
+      aiText = 'Insulin resistance can make it harder for the body to regulate blood sugar and may affect PCOS symptoms. Regular meals, fiber-rich foods, sleep, and strength training can help; ask your clinician whether testing is appropriate.';
+    } else if (lower.includes('acne') || lower.includes('hair') || lower.includes('testosterone')) {
+      aiText = 'Acne and excess hair can be related to higher androgen activity in PCOS. A dermatologist or gynecologist can discuss evidence-based options; avoid starting hormone or supplement treatments without medical guidance.';
+    }
+    await new Promise(resolve => setTimeout(resolve, 350));
+    typing.innerHTML=`<div class="ai-tag">OvaMind AI · Preview</div>${aiText.replace(/\n/g,'<br>')}`;
     chatHistory.push({role:'assistant',content:aiText});
   } catch(e) {
     typing.innerHTML='<div class="ai-tag">OvaMind AI</div>Sorry, I couldn\'t respond right now. Please try again.';
@@ -1329,12 +1339,22 @@ if ('serviceWorker' in navigator) {
 // ══════════════════════════════════════════
 //  WHOP / ACCESS GATE
 // ══════════════════════════════════════════
-const WHOP_PRODUCT_URL  = 'https://whop.com/your-product-url/'; // 🔁 Replace with your real Whop link
+const WHOP_PRODUCT_URL  = 'https://whop.com/your-product-url/'; // Replace with your real Whop link before launch
 const VERIFY_ENDPOINT   = '/.netlify/functions/verify-access';
+const DEMO_MODE = WHOP_PRODUCT_URL.includes('your-product-url');
 const CHECK_INTERVAL_MS = 30 * 60 * 1000; // 30 min re-check
 
 function goToWhop() {
+  if (DEMO_MODE) {
+    document.getElementById('access-note').textContent = 'Connect your Whop product link to enable purchases.';
+    return;
+  }
   window.location.href = WHOP_PRODUCT_URL;
+}
+
+function startDemo() {
+  localStorage.setItem('ovamind_demo_mode', 'true');
+  grantAccess();
 }
 
 async function verifyAccess(whopUserId, email) {
@@ -1384,8 +1404,15 @@ async function initAccessGate() {
   const storedId    = localStorage.getItem('ovamind_whop_id');
   const storedEmail = localStorage.getItem('ovamind_email');
 
+  // The starter project ships with a placeholder Whop URL, so make it usable
+  // immediately in preview. Once a real product URL is configured, the gate
+  // automatically switches back to verified access.
+  if (DEMO_MODE) {
+    grantAccess();
+    return;
+  }
+
   if (!storedId && !storedEmail) {
-    // No identity at all — send to Whop
     denyAccess();
     return;
   }
