@@ -1008,28 +1008,31 @@ function toggleChip(el) { el.classList.toggle('selected'); }
 // ══════════════════════════════════════════
 //  QUICK LOG
 // ══════════════════════════════════════════
-function saveQuickLog() {
+async function saveQuickLog() {
   const w = document.getElementById('water-log').value;
   const s = document.getElementById('sleep-log').value;
-  showToast(`✅ Logged: ${w} glasses water, ${s}h sleep`);
+  try { await window.ovamindSaveQuickLog(w, s); showToast(`Logged: ${w} glasses water, ${s}h sleep`); }
+  catch (error) { console.error('[OvaMind] daily log save failed', error); showToast('Could not save your record. Please try again','warn'); }
 }
 
-function logPeriod() {
+async function logPeriod() {
   const d = document.getElementById('period-start').value;
   const f = document.getElementById('flow-intensity').value;
   if(!d){showToast('Please select a start date','warn');return;}
-  showToast(`🌸 Period logged: ${d}, ${f} flow`);
+  try { await window.ovamindLogPeriod(d, f); showToast(`Period logged: ${d}, ${f} flow`); }
+  catch (error) { console.error('[OvaMind] period save failed', error); showToast('Could not save your period log. Please try again','warn'); }
 }
 
-function saveSymptoms() {
+async function saveSymptoms() {
   const sel = [...document.querySelectorAll('#symptom-chips .chip.selected')].map(c=>c.textContent.trim());
   if(!sel.length){showToast('Select at least one symptom','warn');return;}
-  showToast(`✅ Symptoms saved: ${sel.join(', ')}`);
+  try { await window.ovamindSaveSymptoms(sel, document.getElementById('pain-slider').value); showToast(`Symptoms saved: ${sel.join(', ')}`); }
+  catch (error) { console.error('[OvaMind] symptom save failed', error); showToast('Could not save your symptoms. Please try again','warn'); }
 }
 
 function updatePain(v) { document.getElementById('pain-val').textContent = v+' / 10'; }
 
-// ══════════════════════════════════════════
+// ════════════════════════════���═════════════
 //  FOOD LOG
 // ══════════════════════════════════════════
 let totalCal = 1420;
@@ -1329,111 +1332,16 @@ window.addEventListener('appinstalled', () => {
 //  SERVICE WORKER REGISTRATION
 // ══════════════════════════════════════════
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(reg => console.log('[SW] Registered:', reg.scope))
-      .catch(err => console.error('[SW] Failed:', err));
+  window.addEventListener('load', async () => {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(registrations.map(registration => registration.unregister()));
+    const cacheNames = await caches.keys();
+    await Promise.all(cacheNames.map(cacheName => caches.delete(cacheName)));
   });
 }
 
-// ══════════════════════════════════════════
-//  WHOP / ACCESS GATE
-// ══════════════════════════════════════════
-const WHOP_PRODUCT_URL  = 'https://whop.com/your-product-url/'; // Replace with your real Whop link before launch
-const VERIFY_ENDPOINT   = '/.netlify/functions/verify-access';
-const DEMO_MODE = WHOP_PRODUCT_URL.includes('your-product-url');
-const CHECK_INTERVAL_MS = 30 * 60 * 1000; // 30 min re-check
-
-function goToWhop() {
-  if (DEMO_MODE) {
-    document.getElementById('access-note').textContent = 'Connect your Whop product link to enable purchases.';
-    return;
-  }
-  window.location.href = WHOP_PRODUCT_URL;
-}
-
-function startDemo() {
-  localStorage.setItem('ovamind_demo_mode', 'true');
-  grantAccess();
-}
-
-async function verifyAccess(whopUserId, email) {
-  try {
-    const res = await fetch(VERIFY_ENDPOINT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ whop_user_id: whopUserId, email })
-    });
-    const data = await res.json();
-    return data.access === true;
-  } catch {
-    // Network error — allow if previously verified
-    return !!localStorage.getItem('ovamind_last_verified');
-  }
-}
-
-function grantAccess() {
-  localStorage.setItem('ovamind_last_verified', Date.now());
-  document.getElementById('loading-screen').classList.add('hidden');
-  document.getElementById('paywall-screen').classList.add('hidden');
-  document.getElementById('app-content').classList.remove('hidden');
-}
-
-function denyAccess() {
-  localStorage.removeItem('ovamind_whop_id');
-  localStorage.removeItem('ovamind_email');
-  localStorage.removeItem('ovamind_last_verified');
-  document.getElementById('loading-screen').classList.add('hidden');
-  document.getElementById('app-content').classList.add('hidden');
-  document.getElementById('paywall-screen').classList.remove('hidden');
-}
-
-async function initAccessGate() {
-  // Show loading, hide app
-  document.getElementById('loading-screen').classList.remove('hidden');
-  document.getElementById('app-content').classList.add('hidden');
-
-  // Check if Whop redirected back with credentials
-  const params    = new URLSearchParams(window.location.search);
-  const whopId    = params.get('whop_user_id');
-  const email     = params.get('email');
-  if (whopId) localStorage.setItem('ovamind_whop_id', whopId);
-  if (email)  localStorage.setItem('ovamind_email', email);
-  if (whopId || email) window.history.replaceState({}, '', '/');
-
-  const storedId    = localStorage.getItem('ovamind_whop_id');
-  const storedEmail = localStorage.getItem('ovamind_email');
-
-  // The starter project ships with a placeholder Whop URL, so make it usable
-  // immediately in preview. Once a real product URL is configured, the gate
-  // automatically switches back to verified access.
-  if (DEMO_MODE) {
-    grantAccess();
-    return;
-  }
-
-  if (!storedId && !storedEmail) {
-    denyAccess();
-    return;
-  }
-
-  const hasAccess = await verifyAccess(storedId, storedEmail);
-  if (hasAccess) {
-    grantAccess();
-    // Periodic re-check (anti-bypass)
-    setInterval(async () => {
-      const still = await verifyAccess(storedId, storedEmail);
-      if (!still) denyAccess();
-      else localStorage.setItem('ovamind_last_verified', Date.now());
-    }, CHECK_INTERVAL_MS);
-  } else {
-    denyAccess();
-  }
-}
-
-// Run gate after splash clears
-setTimeout(initAccessGate, 2200);
 </script>
+<script type="module" src="/src/app.js"></script>
 
 </div><!-- end #app-content -->
 </body>

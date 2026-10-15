@@ -1,118 +1,100 @@
-// ══════════════════════════════════════════════════════
-//  OvaMind AI — Frontend Access Gate
-//  Flow: Check localStorage → verify with server →
-//        grant access OR redirect to Whop payment page
-// ══════════════════════════════════════════════════════
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
 
-const WHOP_PRODUCT_URL = 'https://whop.com/your-product-url/'; // 🔁 Replace with your Whop link
-const VERIFY_ENDPOINT  = '/.netlify/functions/verify-access';
-const CHECK_INTERVAL_MS = 30 * 60 * 1000; // Re-verify every 30 minutes
+let supabase;
+let currentUser;
 
-// ── Entry point ──
-export async function initAccessGate() {
-  showLoadingScreen();
-
-  // 1. Check if Whop redirected back with user info
-  const urlParams  = new URLSearchParams(window.location.search);
-  const whopUserId = urlParams.get('whop_user_id');
-  const email      = urlParams.get('email');
-
-  if (whopUserId || email) {
-    // Save to localStorage for future visits
-    if (whopUserId) localStorage.setItem('ovamind_whop_id', whopUserId);
-    if (email)      localStorage.setItem('ovamind_email', email);
-    // Clean URL
-    window.history.replaceState({}, '', '/');
-  }
-
-  // 2. Retrieve stored identity
-  const storedId    = localStorage.getItem('ovamind_whop_id');
-  const storedEmail = localStorage.getItem('ovamind_email');
-
-  if (!storedId && !storedEmail) {
-    // No identity — redirect to Whop to purchase/login
-    redirectToWhop();
-    return;
-  }
-
-  // 3. Verify with backend
-  const hasAccess = await verifyAccess(storedId, storedEmail);
-
-  if (hasAccess) {
-    grantAccess();
-    // 4. Periodic re-verification (anti-bypass)
-    startPeriodicCheck(storedId, storedEmail);
-  } else {
-    revokeAccess();
-  }
+async function loadConfig() {
+  const config = {
+    url: import.meta.env?.VITE_SUPABASE_URL || import.meta.env?.NEXT_PUBLIC_SUPABASE_URL,
+    publishableKey: import.meta.env?.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env?.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || import.meta.env?.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  };
+  if (!config.url || !config.publishableKey) throw new Error('Configuration unavailable');
+  supabase = createClient(config.url, config.publishableKey);
+  return supabase;
 }
 
-// ── Verify with Netlify function ──
-async function verifyAccess(whopUserId, email) {
-  try {
-    const res = await fetch(VERIFY_ENDPOINT, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ whop_user_id: whopUserId, email })
-    });
-    const data = await res.json();
-    console.log('[Access Gate]', data);
-    return data.access === true;
-  } catch (err) {
-    console.error('[Access Gate] Verify failed:', err);
-    // On network error: grant temporary access if previously verified
-    return !!localStorage.getItem('ovamind_last_verified');
-  }
+function show(id, visible) {
+  document.getElementById(id)?.classList.toggle('hidden', !visible);
 }
 
-// ── Periodic re-check (prevents bypassing the frontend gate) ──
-function startPeriodicCheck(whopUserId, email) {
-  setInterval(async () => {
-    console.log('[Access Gate] Periodic re-check...');
-    const stillValid = await verifyAccess(whopUserId, email);
-    if (!stillValid) {
-      console.warn('[Access Gate] Access revoked — logging out');
-      revokeAccess();
-    } else {
-      localStorage.setItem('ovamind_last_verified', Date.now());
+function renderAuth() {
+  const paywall = document.getElementById('paywall-screen');
+  paywall.innerHTML = `
+    <div class="paywall-icon">🌸</div>
+    <h1 style="font-family:'DM Serif Display',serif;font-size:30px;margin-bottom:8px">Your private PCOS companion</h1>
+    <p style="max-width:420px;margin:0 auto 22px;color:var(--muted);line-height:1.6">Create an account to securely save your daily health record. OvaMind supports tracking and preparation for clinical conversations; it does not diagnose or treat.</p>
+    <form id="auth-form" style="max-width:340px;margin:auto;text-align:left">
+      <label for="auth-email">Email</label><input id="auth-email" type="email" required autocomplete="email" style="margin-bottom:12px">
+      <label for="auth-password">Password</label><input id="auth-password" type="password" required minlength="8" autocomplete="current-password" style="margin-bottom:12px">
+      <button class="btn-paywall" id="auth-submit" type="submit">Sign in</button>
+      <button class="btn-demo" id="auth-toggle" type="button">Create an account</button>
+      <p id="auth-message" role="status" style="font-size:13px;margin-top:14px;color:var(--muted)"></p>
+    </form>`;
+  let signUp = false;
+  const form = document.getElementById('auth-form');
+  const submit = document.getElementById('auth-submit');
+  const toggle = document.getElementById('auth-toggle');
+  const message = document.getElementById('auth-message');
+  toggle.onclick = () => { signUp = !signUp; submit.textContent = signUp ? 'Create account' : 'Sign in'; toggle.textContent = signUp ? 'I already have an account' : 'Create an account'; };
+  form.onsubmit = async (event) => {
+    event.preventDefault();
+    submit.disabled = true;
+    message.textContent = signUp ? 'Creating your secure account…' : 'Signing in…';
+    const email = document.getElementById('auth-email').value.trim();
+    const password = document.getElementById('auth-password').value;
+    const result = signUp
+      ? await supabase.auth.signUp({ email, password, options: { emailRedirectTo: `${window.location.origin}/` } })
+      : await supabase.auth.signInWithPassword({ email, password });
+    if (result.error) {
+      message.textContent = signUp && result.error.message.toLowerCase().includes('confirm') ? 'Check your email to confirm your account.' : 'We could not complete that request. Check your details and try again.';
+      submit.disabled = false;
+      return;
     }
-  }, CHECK_INTERVAL_MS);
+    if (signUp && !result.data.session) message.textContent = 'Account created. Check your email, then return here to sign in.';
+    else await startApp(result.data.user);
+    submit.disabled = false;
+  };
 }
 
-// ── UI States ──
-function showLoadingScreen() {
-  document.getElementById('loading-screen')?.classList.remove('hidden');
-  document.getElementById('app-content')?.classList.add('hidden');
-  document.getElementById('paywall-screen')?.classList.add('hidden');
+async function startApp(user) {
+  currentUser = user;
+  show('loading-screen', false);
+  show('paywall-screen', false);
+  show('app-content', true);
+  document.querySelector('.hero-sub')?.insertAdjacentHTML('afterend', `<p id="account-label" style="font-size:12px;opacity:.75;margin-top:10px">Private record · ${user.email}</p>`);
+  await loadToday();
 }
 
-function grantAccess() {
-  localStorage.setItem('ovamind_last_verified', Date.now());
-  document.getElementById('loading-screen')?.classList.add('hidden');
-  document.getElementById('paywall-screen')?.classList.add('hidden');
-  document.getElementById('app-content')?.classList.remove('hidden');
-  console.log('[Access Gate] ✅ Access granted');
+async function loadToday() {
+  const today = new Date().toISOString().slice(0, 10);
+  const { data } = await supabase.from('daily_records').select('water_glasses,sleep_hours,pain_score,symptoms,mood').eq('user_id', currentUser.id).eq('record_date', today).maybeSingle();
+  if (!data) return;
+  if (data.water_glasses != null) document.getElementById('water-log').value = data.water_glasses;
+  if (data.sleep_hours != null) document.getElementById('sleep-log').value = data.sleep_hours;
+  if (data.pain_score != null) { document.getElementById('pain-slider').value = data.pain_score; updatePain(data.pain_score); }
 }
 
-function revokeAccess() {
-  localStorage.removeItem('ovamind_whop_id');
-  localStorage.removeItem('ovamind_email');
-  localStorage.removeItem('ovamind_last_verified');
-  document.getElementById('loading-screen')?.classList.add('hidden');
-  document.getElementById('app-content')?.classList.add('hidden');
-  document.getElementById('paywall-screen')?.classList.remove('hidden');
-  console.warn('[Access Gate] ❌ Access denied');
+async function upsertDaily(values) {
+  const { error } = await supabase.from('daily_records').upsert({ user_id: currentUser.id, record_date: new Date().toISOString().slice(0, 10), ...values }, { onConflict: 'user_id,record_date' });
+  if (error) throw error;
 }
 
-function redirectToWhop() {
-  window.location.href = WHOP_PRODUCT_URL;
-}
+window.ovamindSaveQuickLog = async (water, sleep) => { await upsertDaily({ water_glasses: Number(water), sleep_hours: Number(sleep) }); };
+window.ovamindSaveSymptoms = async (symptoms, pain) => { await upsertDaily({ symptoms, pain_score: Number(pain) }); };
+window.ovamindLogPeriod = async (startDate, flow) => { const { error } = await supabase.from('period_logs').insert({ user_id: currentUser.id, start_date: startDate, flow_intensity: flow }); if (error) throw error; };
+window.ovamindLogout = async () => { await supabase.auth.signOut(); window.location.reload(); };
 
-// ── Logout ──
-export function logout() {
-  localStorage.clear();
-  window.location.href = WHOP_PRODUCT_URL;
-}
-
-// ── Run on page load ──
-document.addEventListener('DOMContentLoaded', initAccessGate);
+window.addEventListener('DOMContentLoaded', async () => {
+  try {
+    await loadConfig();
+    const { data } = await supabase.auth.getSession();
+    if (data.session?.user) await startApp(data.session.user);
+    else { show('loading-screen', false); show('paywall-screen', true); renderAuth(); }
+    supabase.auth.onAuthStateChange((_event, session) => { if (session?.user && !currentUser) startApp(session.user); });
+  } catch (error) {
+    console.error('[OvaMind] startup failed', error);
+    show('loading-screen', false); show('paywall-screen', true);
+    const screen = document.getElementById('paywall-screen');
+    screen.innerHTML = '<h1>OvaMind is temporarily unavailable</h1><p>Please refresh and try again.</p>';
+  }
+});

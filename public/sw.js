@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ovamind-v1';
+const CACHE_NAME = 'ovamind-v2';
 const OFFLINE_URL = '/offline.html';
 
 const STATIC_ASSETS = [
