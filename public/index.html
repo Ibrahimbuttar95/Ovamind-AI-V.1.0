@@ -578,10 +578,10 @@
     <div class="hero-title">How are you feeling today?</div>
     <div class="hero-sub">Your PCOS journey, tracked with care.</div>
     <div class="stats-row">
-      <div class="stat-pill"><div class="val">Day 14</div><div class="lbl">Cycle Day</div></div>
-      <div class="stat-pill"><div class="val">72%</div><div class="lbl">Wellness Score</div></div>
-      <div class="stat-pill"><div class="val">1,420</div><div class="lbl">Calories</div></div>
-      <div class="stat-pill"><div class="val">6.8h</div><div class="lbl">Sleep</div></div>
+<div class="stat-pill"><div class="val" id="cycle-day-stat">—</div><div class="lbl">Cycle day</div></div>
+  <div class="stat-pill"><div class="val" id="wellness-stat">—</div><div class="lbl">Wellness score</div></div>
+      <div class="stat-pill"><div class="val" id="dashboard-calories">—</div><div class="lbl">Calories logged</div></div>
+      <div class="stat-pill"><div class="val" id="dashboard-sleep">—</div><div class="lbl">Sleep logged</div></div>
     </div>
   </div>
 
@@ -589,8 +589,8 @@
     <div class="card">
       <div class="card-title">Today's Mood</div>
       <div class="chips" id="mood-chips">
-        <div class="chip selected" onclick="toggleChip(this)">😊 Good</div>
-        <div class="chip" onclick="toggleChip(this)">😴 Tired</div>
+<div class="chip" onclick="toggleChip(this)">Good</div>
+ <div class="chip" onclick="toggleChip(this)">Tired</div>
         <div class="chip" onclick="toggleChip(this)">😣 Crampy</div>
         <div class="chip" onclick="toggleChip(this)">😤 Bloated</div>
         <div class="chip" onclick="toggleChip(this)">🌸 Calm</div>
@@ -607,7 +607,7 @@
         </div>
         <div>
           <label>Sleep (hours)</label>
-          <input type="number" id="sleep-log" placeholder="0" min="0" max="24" step="0.5" value="6.8">
+          <input type="number" id="sleep-log" placeholder="0" min="0" max="24" step="0.5" value="">
         </div>
         <button class="btn-primary" style="width:100%" onclick="saveQuickLog()">Save Log</button>
       </div>
@@ -688,11 +688,7 @@
     <div class="card">
       <div class="card-title">Cycle Insights</div>
       <div style="font-size:13px;line-height:1.8;color:var(--muted);">
-        <div>📅 <strong style="color:var(--ink)">Last Period:</strong> May 31</div>
-        <div>🔄 <strong style="color:var(--ink)">Avg Cycle:</strong> 34 days (irregular)</div>
-        <div>🌸 <strong style="color:var(--ink)">Next Period:</strong> ~July 4</div>
-        <div>🥚 <strong style="color:var(--ink)">Fertile Window:</strong> Jun 16–20</div>
-        <div>⚠️ <strong style="color:var(--ink)">Note:</strong> <span class="badge badge-warn">Irregular Cycle</span></div>
+<div id="cycle-insights-empty">Log a period to build your personal cycle history. Predictions are not shown until you have enough records.</div>
       </div>
     </div>
   </div>
@@ -701,7 +697,7 @@
     <div class="card-title">Today's Symptoms</div>
     <div class="chips" id="symptom-chips">
       <div class="chip" onclick="toggleChip(this)">🤕 Headache</div>
-      <div class="chip selected" onclick="toggleChip(this)">😣 Cramps</div>
+      <div class="chip" onclick="toggleChip(this)">Cramps</div>
       <div class="chip" onclick="toggleChip(this)">😤 Bloating</div>
       <div class="chip" onclick="toggleChip(this)">🌙 Fatigue</div>
       <div class="chip selected" onclick="toggleChip(this)">🧴 Acne</div>
@@ -878,8 +874,8 @@
   <div class="card" style="padding:16px;">
     <div id="chat-box">
       <div class="msg ai">
-        <div class="ai-tag">OvaMind AI</div>
-        Hello! I'm your PCOS health companion. I can help you understand your symptoms, explain hormone results, suggest PCOS-friendly meals, or answer any questions about your cycle and hormones. What's on your mind today?
+<div class="ai-tag">OvaMind AI</div>
+  Ask a question about cycle tracking, symptoms, nutrition, or preparing for a clinician visit. This tool provides education, not diagnosis or treatment.
       </div>
     </div>
     <div class="chat-input-row">
@@ -980,13 +976,14 @@ function toggleChip(el) { el.classList.toggle('selected'); }
   });
 
   const dc = document.getElementById('cal-days');
-  const year = 2025, month = 5;
+  const now = new Date();
+  const year = now.getFullYear(), month = now.getMonth();
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month+1, 0).getDate();
-  const periodDays = [1,2,3,4,5];
-  const fertileDays = [16,17,18,19,20];
-  const ovulationDay = 17;
-  const today = 14;
+  const periodDays = [];
+  const fertileDays = [];
+  const ovulationDay = null;
+  const today = now.getDate();
 
   for(let i=0;i<firstDay;i++){
     const e=document.createElement('div');

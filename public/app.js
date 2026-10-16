@@ -4,10 +4,16 @@ let supabase;
 let currentUser;
 
 async function loadConfig() {
-  const config = {
-    url: import.meta.env?.VITE_SUPABASE_URL || import.meta.env?.NEXT_PUBLIC_SUPABASE_URL,
-    publishableKey: import.meta.env?.VITE_SUPABASE_PUBLISHABLE_KEY || import.meta.env?.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || import.meta.env?.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+  const env = import.meta.env || {};
+  let config = window.OVAMIND_SUPABASE_CONFIG || {
+    url: env.VITE_SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL,
+    publishableKey: env.VITE_SUPABASE_PUBLISHABLE_KEY || env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   };
+  if (!config.url || !config.publishableKey) {
+    const response = await fetch('/.netlify/functions/supabase-config', { headers: { Accept: 'application/json' } });
+    if (!response.ok) throw new Error('Configuration unavailable');
+    config = await response.json();
+  }
   if (!config.url || !config.publishableKey) throw new Error('Configuration unavailable');
   supabase = createClient(config.url, config.publishableKey);
   return supabase;
