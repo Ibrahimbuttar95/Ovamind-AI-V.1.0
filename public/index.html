@@ -474,7 +474,13 @@
     transition: transform 0.2s, opacity 0.2s;
   }
   .btn-paywall:hover { transform: translateY(-2px); opacity: 0.95; }
-
+  .btn-demo {
+    margin-top: 12px; background: transparent; color: white; border: 1px solid rgba(255,255,255,0.5);
+    border-radius: 14px; padding: 12px 24px; font-size: 14px; font-weight: 600; cursor: pointer;
+    width: 100%; max-width: 320px; transition: background 0.2s, border-color 0.2s;
+  }
+  .btn-demo:hover { background: rgba(255,255,255,0.12); border-color: white; }
+  
   /* ── APP CONTENT wrapper ── */
   #app-content.hidden { display: none; }
 </style>
@@ -511,7 +517,8 @@
     <div>✅ Works offline — add to home screen</div>
   </div>
   <button class="btn-paywall" onclick="goToWhop()">Get Lifetime Access →</button>
-  <p style="font-size:12px;opacity:0.6;margin-top:16px">Already purchased? <span style="text-decoration:underline;cursor:pointer" onclick="goToWhop()">Sign in via Whop</span></p>
+  
+  <p id="access-note" style="font-size:12px;opacity:0.6;margin-top:16px">Already purchased? <span style="text-decoration:underline;cursor:pointer" onclick="goToWhop()">Sign in via Whop</span></p>
 </div>
 
 <!-- SPLASH SCREEN -->
@@ -567,14 +574,14 @@
 <div id="page-dashboard" class="page active">
 
   <div class="hero">
-    <div class="hero-greeting">Good morning ✨</div>
+    <div class="hero-greeting">Daily record</div>
     <div class="hero-title">How are you feeling today?</div>
     <div class="hero-sub">Your PCOS journey, tracked with care.</div>
     <div class="stats-row">
-      <div class="stat-pill"><div class="val">Day 14</div><div class="lbl">Cycle Day</div></div>
-      <div class="stat-pill"><div class="val">72%</div><div class="lbl">Wellness Score</div></div>
-      <div class="stat-pill"><div class="val">1,420</div><div class="lbl">Calories</div></div>
-      <div class="stat-pill"><div class="val">6.8h</div><div class="lbl">Sleep</div></div>
+<div class="stat-pill"><div class="val" id="cycle-day-stat">—</div><div class="lbl">Cycle day</div></div>
+  <div class="stat-pill"><div class="val" id="wellness-stat">—</div><div class="lbl">Wellness score</div></div>
+      <div class="stat-pill"><div class="val" id="dashboard-calories">—</div><div class="lbl">Calories logged</div></div>
+      <div class="stat-pill"><div class="val" id="dashboard-sleep">—</div><div class="lbl">Sleep logged</div></div>
     </div>
   </div>
 
@@ -582,8 +589,8 @@
     <div class="card">
       <div class="card-title">Today's Mood</div>
       <div class="chips" id="mood-chips">
-        <div class="chip selected" onclick="toggleChip(this)">😊 Good</div>
-        <div class="chip" onclick="toggleChip(this)">😴 Tired</div>
+<div class="chip" onclick="toggleChip(this)">Good</div>
+ <div class="chip" onclick="toggleChip(this)">Tired</div>
         <div class="chip" onclick="toggleChip(this)">😣 Crampy</div>
         <div class="chip" onclick="toggleChip(this)">😤 Bloated</div>
         <div class="chip" onclick="toggleChip(this)">🌸 Calm</div>
@@ -596,11 +603,11 @@
       <div style="display:flex;flex-direction:column;gap:10px;">
         <div>
           <label>Water (glasses)</label>
-          <input type="number" id="water-log" placeholder="0" min="0" max="20" value="5">
+          <input type="number" id="water-log" placeholder="0" min="0" max="20">
         </div>
         <div>
           <label>Sleep (hours)</label>
-          <input type="number" id="sleep-log" placeholder="0" min="0" max="24" step="0.5" value="6.8">
+          <input type="number" id="sleep-log" placeholder="0" min="0" max="24" step="0.5" value="">
         </div>
         <button class="btn-primary" style="width:100%" onclick="saveQuickLog()">Save Log</button>
       </div>
@@ -609,36 +616,12 @@
 
   <div class="card">
     <div class="card-title">Today's Goals</div>
-    <div class="progress-wrap">
-      <div class="progress-label"><span>Water Intake</span><span>5 / 8 glasses</span></div>
-      <div class="progress-bar"><div class="progress-fill" style="width:62%;background:linear-gradient(90deg,#7C3AED,#C4B5FD)"></div></div>
-    </div>
-    <div class="progress-wrap">
-      <div class="progress-label"><span>Calories</span><span>1,420 / 1,800 kcal</span></div>
-      <div class="progress-bar"><div class="progress-fill" style="width:79%;background:linear-gradient(90deg,#E8649A,#FDE8F0)"></div></div>
-    </div>
-    <div class="progress-wrap">
-      <div class="progress-label"><span>Movement</span><span>25 / 30 min</span></div>
-      <div class="progress-bar"><div class="progress-fill" style="width:83%;background:linear-gradient(90deg,#22C55E,#86EFAC)"></div></div>
-    </div>
+    <p style="font-size:13px;color:var(--muted);line-height:1.6">Your goals will appear here after you record your own activity.</p>
   </div>
 
-  <div class="grid-3">
-    <div class="tip-card">
-      <div class="tip-icon">💊</div>
-      <div class="tip-title">Inositol Tip</div>
-      <div class="tip-text">Myo-inositol (4g/day) may improve insulin sensitivity in PCOS.</div>
-    </div>
-    <div class="tip-card">
-      <div class="tip-icon">🥦</div>
-      <div class="tip-title">Anti-Inflammatory</div>
-      <div class="tip-text">Add turmeric & omega-3 rich foods to reduce PCOS-related inflammation.</div>
-    </div>
-    <div class="tip-card">
-      <div class="tip-icon">🧘‍♀️</div>
-      <div class="tip-title">Stress & Cortisol</div>
-      <div class="tip-text">High cortisol worsens PCOS symptoms. Try 10 min of breathing exercises.</div>
-    </div>
+  <div class="card">
+    <div class="card-title">Personal guidance</div>
+    <p style="font-size:13px;color:var(--muted);line-height:1.6">No guidance has been added. Your records remain empty until you enter them.</p>
   </div>
 </div>
 
@@ -647,7 +630,7 @@
   <div class="section-title">Cycle & Symptom Tracker</div>
 
   <div class="card">
-    <div class="card-title">June 2025 — Cycle Calendar</div>
+    <div class="card-title" id="calendar-title">Cycle Calendar</div>
     <div class="calendar-grid" id="cal-headers"></div>
     <div class="calendar-grid" id="cal-days"></div>
     <div class="legend">
@@ -669,9 +652,9 @@
           <label>Flow Intensity</label>
           <select id="flow-intensity">
             <option>Light</option>
-            <option selected>Medium</option>
+            <option value="" selected disabled>Select intensity</option>
+            <option>Medium</option>
             <option>Heavy</option>
-            <option>Spotting</option>
           </select>
         </div>
         <button class="btn-primary" onclick="logPeriod()">Log Period</button>
@@ -681,11 +664,7 @@
     <div class="card">
       <div class="card-title">Cycle Insights</div>
       <div style="font-size:13px;line-height:1.8;color:var(--muted);">
-        <div>📅 <strong style="color:var(--ink)">Last Period:</strong> May 31</div>
-        <div>🔄 <strong style="color:var(--ink)">Avg Cycle:</strong> 34 days (irregular)</div>
-        <div>🌸 <strong style="color:var(--ink)">Next Period:</strong> ~July 4</div>
-        <div>🥚 <strong style="color:var(--ink)">Fertile Window:</strong> Jun 16–20</div>
-        <div>⚠️ <strong style="color:var(--ink)">Note:</strong> <span class="badge badge-warn">Irregular Cycle</span></div>
+<div id="cycle-insights-empty">Log a period to build your personal cycle history. Predictions are not shown until you have enough records.</div>
       </div>
     </div>
   </div>
@@ -694,10 +673,10 @@
     <div class="card-title">Today's Symptoms</div>
     <div class="chips" id="symptom-chips">
       <div class="chip" onclick="toggleChip(this)">🤕 Headache</div>
-      <div class="chip selected" onclick="toggleChip(this)">😣 Cramps</div>
+      <div class="chip" onclick="toggleChip(this)">Cramps</div>
       <div class="chip" onclick="toggleChip(this)">😤 Bloating</div>
       <div class="chip" onclick="toggleChip(this)">🌙 Fatigue</div>
-      <div class="chip selected" onclick="toggleChip(this)">🧴 Acne</div>
+      <div class="chip" onclick="toggleChip(this)">🧴 Acne</div>
       <div class="chip" onclick="toggleChip(this)">💇 Hair Loss</div>
       <div class="chip" onclick="toggleChip(this)">😤 Mood Swings</div>
       <div class="chip" onclick="toggleChip(this)">🍬 Cravings</div>
@@ -712,8 +691,8 @@
   <div class="card">
     <div class="card-title">Pain Level</div>
     <label>Rate your pain today (0 = none, 10 = severe)</label>
-    <input type="range" id="pain-slider" min="0" max="10" value="3" oninput="updatePain(this.value)" style="width:100%;margin:10px 0;accent-color:var(--violet)">
-    <div style="text-align:center;font-size:24px;font-weight:700;color:var(--violet)" id="pain-val">3 / 10</div>
+    <input type="range" id="pain-slider" min="0" max="10" value="0" oninput="updatePain(this.value)" style="width:100%;margin:10px 0;accent-color:var(--violet)">
+    <div style="text-align:center;font-size:24px;font-weight:700;color:var(--violet)" id="pain-val">0 / 10</div>
   </div>
 </div>
 
@@ -726,7 +705,7 @@
     <div class="grid-2" style="gap:10px;margin-bottom:10px">
       <div>
         <label>Food Item</label>
-        <input type="text" id="food-name-input" placeholder="e.g. Greek Yogurt">
+        <input type="text" id="food-name-input" placeholder="Enter food item">
       </div>
       <div>
         <label>Calories</label>
@@ -751,27 +730,10 @@
 
   <div class="card">
     <div class="card-title">Today's Food Log</div>
-    <div id="food-log-list">
-      <div class="food-item">
-        <div><div class="food-name">Greek Yogurt + Berries</div><div class="food-macros">Breakfast · 12g protein · Low GI</div></div>
-        <div class="food-cal">180</div>
-      </div>
-      <div class="food-item">
-        <div><div class="food-name">Quinoa Salad</div><div class="food-macros">Lunch · 18g protein · Anti-inflammatory</div></div>
-        <div class="food-cal">420</div>
-      </div>
-      <div class="food-item">
-        <div><div class="food-name">Almonds (30g)</div><div class="food-macros">Snack · 6g protein · Healthy fats</div></div>
-        <div class="food-cal">170</div>
-      </div>
-      <div class="food-item">
-        <div><div class="food-name">Grilled Salmon + Broccoli</div><div class="food-macros">Dinner · 35g protein · Omega-3 rich</div></div>
-        <div class="food-cal">650</div>
-      </div>
-    </div>
+    <div id="food-log-list"><p style="font-size:13px;color:var(--muted);line-height:1.6">No food recorded for today.</p></div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
       <div style="font-size:13px;color:var(--muted)">Total Today</div>
-      <div style="font-size:18px;font-weight:700;color:var(--violet)" id="total-cal">1,420 kcal</div>
+      <div style="font-size:18px;font-weight:700;color:var(--violet)" id="total-cal">0 kcal</div>
     </div>
   </div>
 
@@ -794,7 +756,7 @@
     <div class="card-title">Get AI Meal Plan</div>
     <div style="margin-bottom:12px;">
       <label>Any dietary restrictions?</label>
-      <input type="text" id="diet-restriction" placeholder="e.g. vegetarian, dairy-free, gluten-free">
+      <input type="text" id="diet-restriction" placeholder="Enter dietary restrictions">
     </div>
     <button class="btn-primary" onclick="getMealPlan()" id="meal-plan-btn">🍽 Generate PCOS Meal Plan</button>
     <div id="meal-plan-result" style="margin-top:16px;font-size:13px;line-height:1.8;color:var(--ink);display:none;"></div>
@@ -808,9 +770,9 @@
   <div class="card">
     <div class="card-title">Log Hormone Levels</div>
     <div class="grid-2" style="gap:10px;margin-bottom:12px">
-      <div><label>LH (mIU/mL)</label><input type="number" id="lh-val" placeholder="e.g. 12.5" step="0.1"></div>
-      <div><label>FSH (mIU/mL)</label><input type="number" id="fsh-val" placeholder="e.g. 6.0" step="0.1"></div>
-      <div><label>Testosterone (ng/dL)</label><input type="number" id="t-val" placeholder="e.g. 65" step="1"></div>
+      <div><label>LH (mIU/mL)</label><input type="number" id="lh-val" placeholder="Enter value" step="0.1"></div>
+      <div><label>FSH (mIU/mL)</label><input type="number" id="fsh-val" placeholder="Enter value" step="0.1"></div>
+      <div><label>Testosterone (ng/dL)</label><input type="number" id="t-val" placeholder="Enter value" step="1"></div>
       <div><label>Insulin (μIU/mL)</label><input type="number" id="ins-val" placeholder="e.g. 18" step="0.1"></div>
       <div><label>AMH (ng/mL)</label><input type="number" id="amh-val" placeholder="e.g. 7.2" step="0.1"></div>
       <div><label>Estradiol (pg/mL)</label><input type="number" id="e2-val" placeholder="e.g. 120" step="1"></div>
@@ -821,35 +783,8 @@
 
   <div class="card">
     <div class="card-title">Current Hormone Profile</div>
-    <div id="hormone-bars">
-      <div class="hormone-row">
-        <div class="hormone-name">LH / FSH Ratio</div>
-        <div class="hormone-bar-wrap">
-          <div class="progress-bar"><div class="progress-fill" style="width:75%;background:linear-gradient(90deg,var(--rose),#FCA5A5)"></div></div>
-        </div>
-        <div class="hormone-val" style="color:var(--rose)">2.1 <span class="badge badge-warn" style="font-size:10px">High</span></div>
-      </div>
-      <div class="hormone-row">
-        <div class="hormone-name">Testosterone</div>
-        <div class="hormone-bar-wrap">
-          <div class="progress-bar"><div class="progress-fill" style="width:60%;background:linear-gradient(90deg,var(--warn),#FDE68A)"></div></div>
-        </div>
-        <div class="hormone-val" style="color:var(--warn)">65 ng/dL</div>
-      </div>
-      <div class="hormone-row">
-        <div class="hormone-name">Insulin</div>
-        <div class="hormone-bar-wrap">
-          <div class="progress-bar"><div class="progress-fill" style="width:55%;background:linear-gradient(90deg,var(--violet),var(--lavender))"></div></div>
-        </div>
-        <div class="hormone-val" style="color:var(--violet)">18 μIU/mL</div>
-      </div>
-      <div class="hormone-row">
-        <div class="hormone-name">AMH</div>
-        <div class="hormone-bar-wrap">
-          <div class="progress-bar"><div class="progress-fill" style="width:85%;background:linear-gradient(90deg,#7C3AED,var(--lavender))"></div></div>
-        </div>
-        <div class="hormone-val" style="color:var(--violet)">7.2 ng/mL <span class="badge badge-violet" style="font-size:10px">Elevated</span></div>
-      </div>
+    <div id="hormone-bars" style="font-size:13px;line-height:1.6;color:var(--muted)">
+      No hormone results recorded yet. Add your own laboratory values above to review them.
     </div>
   </div>
 
@@ -870,13 +805,10 @@
 
   <div class="card" style="padding:16px;">
     <div id="chat-box">
-      <div class="msg ai">
-        <div class="ai-tag">OvaMind AI</div>
-        Hello! I'm your PCOS health companion. I can help you understand your symptoms, explain hormone results, suggest PCOS-friendly meals, or answer any questions about your cycle and hormones. What's on your mind today?
-      </div>
+      <div id="chat-empty" style="font-size:13px;color:var(--muted);line-height:1.6">No conversation yet. Ask a question when you are ready.</div>
     </div>
     <div class="chat-input-row">
-      <input type="text" id="chat-input" placeholder="Ask about PCOS, symptoms, nutrition..." onkeydown="if(event.key==='Enter')sendChat()">
+      <input type="text" id="chat-input" placeholder="Ask about PCOS, symptoms, nutrition..." onkeydown="if(event.key==='Enter' && !event.isComposing && event.keyCode !== 229)sendChat()">
       <button class="btn-primary" id="chat-send-btn" onclick="sendChat()">Send</button>
     </div>
   </div>
@@ -973,13 +905,15 @@ function toggleChip(el) { el.classList.toggle('selected'); }
   });
 
   const dc = document.getElementById('cal-days');
-  const year = 2025, month = 5;
+  const now = new Date();
+  const year = now.getFullYear(), month = now.getMonth();
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month+1, 0).getDate();
-  const periodDays = [1,2,3,4,5];
-  const fertileDays = [16,17,18,19,20];
-  const ovulationDay = 17;
-  const today = 14;
+  const periodDays = [];
+  const fertileDays = [];
+  const ovulationDay = null;
+  document.getElementById('calendar-title').textContent = `Cycle Calendar · ${now.toLocaleString(undefined, { month: 'long', year: 'numeric' })}`;
+  const today = now.getDate();
 
   for(let i=0;i<firstDay;i++){
     const e=document.createElement('div');
@@ -1001,28 +935,31 @@ function toggleChip(el) { el.classList.toggle('selected'); }
 // ══════════════════════════════════════════
 //  QUICK LOG
 // ══════════════════════════════════════════
-function saveQuickLog() {
+async function saveQuickLog() {
   const w = document.getElementById('water-log').value;
   const s = document.getElementById('sleep-log').value;
-  showToast(`✅ Logged: ${w} glasses water, ${s}h sleep`);
+  try { await window.ovamindSaveQuickLog(w, s); showToast(`Logged: ${w} glasses water, ${s}h sleep`); }
+  catch (error) { console.error('[OvaMind] daily log save failed', error); showToast('Could not save your record. Please try again','warn'); }
 }
 
-function logPeriod() {
+async function logPeriod() {
   const d = document.getElementById('period-start').value;
   const f = document.getElementById('flow-intensity').value;
   if(!d){showToast('Please select a start date','warn');return;}
-  showToast(`🌸 Period logged: ${d}, ${f} flow`);
+  try { await window.ovamindLogPeriod(d, f); showToast(`Period logged: ${d}, ${f} flow`); }
+  catch (error) { console.error('[OvaMind] period save failed', error); showToast('Could not save your period log. Please try again','warn'); }
 }
 
-function saveSymptoms() {
+async function saveSymptoms() {
   const sel = [...document.querySelectorAll('#symptom-chips .chip.selected')].map(c=>c.textContent.trim());
   if(!sel.length){showToast('Select at least one symptom','warn');return;}
-  showToast(`✅ Symptoms saved: ${sel.join(', ')}`);
+  try { await window.ovamindSaveSymptoms(sel, document.getElementById('pain-slider').value); showToast(`Symptoms saved: ${sel.join(', ')}`); }
+  catch (error) { console.error('[OvaMind] symptom save failed', error); showToast('Could not save your symptoms. Please try again','warn'); }
 }
 
 function updatePain(v) { document.getElementById('pain-val').textContent = v+' / 10'; }
 
-// ══════════════════════════════════════════
+// ════════════════════════════���═════════════
 //  FOOD LOG
 // ══════════════════════════════════════════
 let totalCal = 1420;
@@ -1117,7 +1054,7 @@ async function analyzeHormones() {
   }
 }
 
-// ══════════════════════════════════════════
+// ═════════════════���════════════════════════
 //  AI CHAT
 // ══════════════════════════════════════════
 const chatHistory = [];
@@ -1148,19 +1085,22 @@ async function sendChat() {
   btn.disabled=true;
 
   try {
-    const resp = await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({
-        model:'claude-sonnet-4-6',
-        max_tokens:1000,
-        system:`You are OvaMind AI, a compassionate and knowledgeable PCOS health companion. You help women understand PCOS, track symptoms, improve nutrition, manage hormones, and support their wellbeing journey. You have expertise in reproductive endocrinology, nutrition science, and women's health. Be warm, supportive, and evidence-based. Keep responses concise but helpful. Always recommend consulting a healthcare provider for medical decisions.`,
-        messages: chatHistory
-      })
-    });
-    const data = await resp.json();
-    const aiText = data.content.map(b=>b.text||'').join('');
-    typing.innerHTML=`<div class="ai-tag">OvaMind AI</div>${aiText.replace(/\n/g,'<br>')}`;
+    // The preview works without exposing a provider API key in the browser.
+    const lower = msg.toLowerCase();
+    let aiText = 'I can help you track symptoms, understand PCOS patterns, and prepare questions for your healthcare provider. Tell me more about what you are experiencing.';
+    if (lower.includes('food') || lower.includes('nutrition') || lower.includes('eat')) {
+      aiText = 'Focus on balanced meals with protein, fiber, and healthy fats: vegetables, beans, lentils, eggs, fish, Greek yogurt, nuts, and whole grains. Pair carbohydrates with protein to support steadier blood sugar. A registered dietitian can personalize this for you.';
+    } else if (lower.includes('cycle') || lower.includes('period') || lower.includes('irregular')) {
+      aiText = 'Irregular cycles are common with PCOS because ovulation may happen less often. Track bleeding, pain, sleep, and symptoms, and speak with a clinician if cycles are consistently longer than 35 days, very heavy, or suddenly change.';
+    } else if (lower.includes('exercise') || lower.includes('workout')) {
+      aiText = 'Choose movement you can sustain: brisk walking, strength training, cycling, swimming, or yoga. A practical starting point is 20–30 minutes most days plus two strength sessions each week.';
+    } else if (lower.includes('insulin') || lower.includes('blood sugar')) {
+      aiText = 'Insulin resistance can make it harder for the body to regulate blood sugar and may affect PCOS symptoms. Regular meals, fiber-rich foods, sleep, and strength training can help; ask your clinician whether testing is appropriate.';
+    } else if (lower.includes('acne') || lower.includes('hair') || lower.includes('testosterone')) {
+      aiText = 'Acne and excess hair can be related to higher androgen activity in PCOS. A dermatologist or gynecologist can discuss evidence-based options; avoid starting hormone or supplement treatments without medical guidance.';
+    }
+    await new Promise(resolve => setTimeout(resolve, 350));
+    typing.innerHTML=`<div class="ai-tag">OvaMind AI · Preview</div>${aiText.replace(/\n/g,'<br>')}`;
     chatHistory.push({role:'assistant',content:aiText});
   } catch(e) {
     typing.innerHTML='<div class="ai-tag">OvaMind AI</div>Sorry, I couldn\'t respond right now. Please try again.';
@@ -1319,94 +1259,16 @@ window.addEventListener('appinstalled', () => {
 //  SERVICE WORKER REGISTRATION
 // ══════════════════════════════════════════
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(reg => console.log('[SW] Registered:', reg.scope))
-      .catch(err => console.error('[SW] Failed:', err));
+  window.addEventListener('load', async () => {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(registrations.map(registration => registration.unregister()));
+    const cacheNames = await caches.keys();
+    await Promise.all(cacheNames.map(cacheName => caches.delete(cacheName)));
   });
 }
 
-// ══════════════════════════════════════════
-//  WHOP / ACCESS GATE
-// ══════════════════════════════════════════
-const WHOP_PRODUCT_URL  = 'https://whop.com/your-product-url/'; // 🔁 Replace with your real Whop link
-const VERIFY_ENDPOINT   = '/.netlify/functions/verify-access';
-const CHECK_INTERVAL_MS = 30 * 60 * 1000; // 30 min re-check
-
-function goToWhop() {
-  window.location.href = WHOP_PRODUCT_URL;
-}
-
-async function verifyAccess(whopUserId, email) {
-  try {
-    const res = await fetch(VERIFY_ENDPOINT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ whop_user_id: whopUserId, email })
-    });
-    const data = await res.json();
-    return data.access === true;
-  } catch {
-    // Network error — allow if previously verified
-    return !!localStorage.getItem('ovamind_last_verified');
-  }
-}
-
-function grantAccess() {
-  localStorage.setItem('ovamind_last_verified', Date.now());
-  document.getElementById('loading-screen').classList.add('hidden');
-  document.getElementById('paywall-screen').classList.add('hidden');
-  document.getElementById('app-content').classList.remove('hidden');
-}
-
-function denyAccess() {
-  localStorage.removeItem('ovamind_whop_id');
-  localStorage.removeItem('ovamind_email');
-  localStorage.removeItem('ovamind_last_verified');
-  document.getElementById('loading-screen').classList.add('hidden');
-  document.getElementById('app-content').classList.add('hidden');
-  document.getElementById('paywall-screen').classList.remove('hidden');
-}
-
-async function initAccessGate() {
-  // Show loading, hide app
-  document.getElementById('loading-screen').classList.remove('hidden');
-  document.getElementById('app-content').classList.add('hidden');
-
-  // Check if Whop redirected back with credentials
-  const params    = new URLSearchParams(window.location.search);
-  const whopId    = params.get('whop_user_id');
-  const email     = params.get('email');
-  if (whopId) localStorage.setItem('ovamind_whop_id', whopId);
-  if (email)  localStorage.setItem('ovamind_email', email);
-  if (whopId || email) window.history.replaceState({}, '', '/');
-
-  const storedId    = localStorage.getItem('ovamind_whop_id');
-  const storedEmail = localStorage.getItem('ovamind_email');
-
-  if (!storedId && !storedEmail) {
-    // No identity at all — send to Whop
-    denyAccess();
-    return;
-  }
-
-  const hasAccess = await verifyAccess(storedId, storedEmail);
-  if (hasAccess) {
-    grantAccess();
-    // Periodic re-check (anti-bypass)
-    setInterval(async () => {
-      const still = await verifyAccess(storedId, storedEmail);
-      if (!still) denyAccess();
-      else localStorage.setItem('ovamind_last_verified', Date.now());
-    }, CHECK_INTERVAL_MS);
-  } else {
-    denyAccess();
-  }
-}
-
-// Run gate after splash clears
-setTimeout(initAccessGate, 2200);
 </script>
+<script type="module" src="/src/app.js"></script>
 
 </div><!-- end #app-content -->
 </body>
