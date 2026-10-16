@@ -517,7 +517,7 @@
     <div>✅ Works offline — add to home screen</div>
   </div>
   <button class="btn-paywall" onclick="goToWhop()">Get Lifetime Access →</button>
-  <button class="btn-demo" onclick="startDemo()">Explore the demo</button>
+  
   <p id="access-note" style="font-size:12px;opacity:0.6;margin-top:16px">Already purchased? <span style="text-decoration:underline;cursor:pointer" onclick="goToWhop()">Sign in via Whop</span></p>
 </div>
 
@@ -574,7 +574,7 @@
 <div id="page-dashboard" class="page active">
 
   <div class="hero">
-    <div class="hero-greeting">Good morning ✨</div>
+    <div class="hero-greeting">Daily record</div>
     <div class="hero-title">How are you feeling today?</div>
     <div class="hero-sub">Your PCOS journey, tracked with care.</div>
     <div class="stats-row">
@@ -603,7 +603,7 @@
       <div style="display:flex;flex-direction:column;gap:10px;">
         <div>
           <label>Water (glasses)</label>
-          <input type="number" id="water-log" placeholder="0" min="0" max="20" value="5">
+          <input type="number" id="water-log" placeholder="0" min="0" max="20">
         </div>
         <div>
           <label>Sleep (hours)</label>
@@ -616,18 +616,7 @@
 
   <div class="card">
     <div class="card-title">Today's Goals</div>
-    <div class="progress-wrap">
-      <div class="progress-label"><span>Water Intake</span><span>5 / 8 glasses</span></div>
-      <div class="progress-bar"><div class="progress-fill" style="width:62%;background:linear-gradient(90deg,#7C3AED,#C4B5FD)"></div></div>
-    </div>
-    <div class="progress-wrap">
-      <div class="progress-label"><span>Calories</span><span>1,420 / 1,800 kcal</span></div>
-      <div class="progress-bar"><div class="progress-fill" style="width:79%;background:linear-gradient(90deg,#E8649A,#FDE8F0)"></div></div>
-    </div>
-    <div class="progress-wrap">
-      <div class="progress-label"><span>Movement</span><span>25 / 30 min</span></div>
-      <div class="progress-bar"><div class="progress-fill" style="width:83%;background:linear-gradient(90deg,#22C55E,#86EFAC)"></div></div>
-    </div>
+    <p style="font-size:13px;color:var(--muted);line-height:1.6">Your goals will appear here after you record your own activity.</p>
   </div>
 
   <div class="grid-3">
@@ -654,7 +643,7 @@
   <div class="section-title">Cycle & Symptom Tracker</div>
 
   <div class="card">
-    <div class="card-title">June 2025 — Cycle Calendar</div>
+    <div class="card-title" id="calendar-title">Cycle Calendar</div>
     <div class="calendar-grid" id="cal-headers"></div>
     <div class="calendar-grid" id="cal-days"></div>
     <div class="legend">
@@ -676,9 +665,9 @@
           <label>Flow Intensity</label>
           <select id="flow-intensity">
             <option>Light</option>
-            <option selected>Medium</option>
+            <option value="" selected disabled>Select intensity</option>
+            <option>Medium</option>
             <option>Heavy</option>
-            <option>Spotting</option>
           </select>
         </div>
         <button class="btn-primary" onclick="logPeriod()">Log Period</button>
@@ -700,7 +689,7 @@
       <div class="chip" onclick="toggleChip(this)">Cramps</div>
       <div class="chip" onclick="toggleChip(this)">😤 Bloating</div>
       <div class="chip" onclick="toggleChip(this)">🌙 Fatigue</div>
-      <div class="chip selected" onclick="toggleChip(this)">🧴 Acne</div>
+      <div class="chip" onclick="toggleChip(this)">🧴 Acne</div>
       <div class="chip" onclick="toggleChip(this)">💇 Hair Loss</div>
       <div class="chip" onclick="toggleChip(this)">😤 Mood Swings</div>
       <div class="chip" onclick="toggleChip(this)">🍬 Cravings</div>
@@ -715,7 +704,7 @@
   <div class="card">
     <div class="card-title">Pain Level</div>
     <label>Rate your pain today (0 = none, 10 = severe)</label>
-    <input type="range" id="pain-slider" min="0" max="10" value="3" oninput="updatePain(this.value)" style="width:100%;margin:10px 0;accent-color:var(--violet)">
+    <input type="range" id="pain-slider" min="0" max="10" value="0" oninput="updatePain(this.value)" style="width:100%;margin:10px 0;accent-color:var(--violet)">
     <div style="text-align:center;font-size:24px;font-weight:700;color:var(--violet)" id="pain-val">3 / 10</div>
   </div>
 </div>
@@ -754,27 +743,10 @@
 
   <div class="card">
     <div class="card-title">Today's Food Log</div>
-    <div id="food-log-list">
-      <div class="food-item">
-        <div><div class="food-name">Greek Yogurt + Berries</div><div class="food-macros">Breakfast · 12g protein · Low GI</div></div>
-        <div class="food-cal">180</div>
-      </div>
-      <div class="food-item">
-        <div><div class="food-name">Quinoa Salad</div><div class="food-macros">Lunch · 18g protein · Anti-inflammatory</div></div>
-        <div class="food-cal">420</div>
-      </div>
-      <div class="food-item">
-        <div><div class="food-name">Almonds (30g)</div><div class="food-macros">Snack · 6g protein · Healthy fats</div></div>
-        <div class="food-cal">170</div>
-      </div>
-      <div class="food-item">
-        <div><div class="food-name">Grilled Salmon + Broccoli</div><div class="food-macros">Dinner · 35g protein · Omega-3 rich</div></div>
-        <div class="food-cal">650</div>
-      </div>
-    </div>
+    <div id="food-log-list"><p style="font-size:13px;color:var(--muted);line-height:1.6">No food recorded for today.</p></div>
     <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
       <div style="font-size:13px;color:var(--muted)">Total Today</div>
-      <div style="font-size:18px;font-weight:700;color:var(--violet)" id="total-cal">1,420 kcal</div>
+      <div style="font-size:18px;font-weight:700;color:var(--violet)" id="total-cal">0 kcal</div>
     </div>
   </div>
 
@@ -983,6 +955,7 @@ function toggleChip(el) { el.classList.toggle('selected'); }
   const periodDays = [];
   const fertileDays = [];
   const ovulationDay = null;
+  document.getElementById('calendar-title').textContent = `Cycle Calendar · ${now.toLocaleString(undefined, { month: 'long', year: 'numeric' })}`;
   const today = now.getDate();
 
   for(let i=0;i<firstDay;i++){
